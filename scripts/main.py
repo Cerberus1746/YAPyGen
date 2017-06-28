@@ -1,36 +1,49 @@
 import add_objects, chasis
 import bge
 
-if not bge.logic.globalDict.get("globalInit", False):
-	bge.logic.globalDict['globalInit'] =  True
-	bge.logic.globalDict['vehicles'] = []
-	bge.logic.setTimeScale(10)
+class Main():
+	vehicles = []
+	def __init__(self):
+		bge.logic.setTimeScale(10)
 
-scene = bge.logic.getCurrentScene()
-sceneObjects = scene.objects
-cam = sceneObjects['Camera']
-adder = add_objects.Add(sceneObjects["Floor"])
+	def refreshScene(self):
+		self.scene = bge.logic.getCurrentScene()
+		self.sceneObjects = self.scene.objects
+		self.cam = self.sceneObjects['Camera']
+		self.adder = add_objects.Add(self.sceneObjects["Floor"])
+		
+		startingPoint = [0,0,0.5]
+		recentChassi = chasis.Chasis(self.adder.inPosAndRot(
+			"Master",
+			startingPoint,
+			[0, 0, 0])
+		)
+		recentChassi.startingCoordinate = startingPoint
 
-if not cam['init']:
-	startingPoint = [0,0,0.5]
-	recentChassi = chasis.Chasis(adder.inPosAndRot(
-		"Master",
-		startingPoint,
-		[0, 0, 0])
-	)
-	recentChassi.startingCoordinate = startingPoint
+		self.currentVehicle = recentChassi
 
-	bge.logic.globalDict['currentVehicle'] = recentChassi
+		self.cam['init'] = True
 
-	cam['init'] = True
+	def perTick(self):
+		if self.cam['time'] >= 3:
+			self.currentVehicle.recordFitness()
+			self.vehicles.append(self.currentVehicle)
+			
+			if len(self.vehicles) <= 3:
+				bge.logic.globalDict['refresh'] = True
+				self.scene.restart()
+			else:
+				for vehicle in self.vehicles:
+					print(vehicle.fitness())
+				self.scene.end()
 
-if cam['time'] >= 3:
-	bge.logic.globalDict['currentVehicle'].recordFitness()
-	bge.logic.globalDict['vehicles'].append(bge.logic.globalDict['currentVehicle'])
-	
-	if len(bge.logic.globalDict['vehicles']) <= 3:
-		scene.restart()
-	else:
-		for vehicle in bge.logic.globalDict['vehicles']:
-			print(vehicle.fitness())
-		scene.end()
+if not bge.logic.globalDict.get("main", False):
+	bge.logic.globalDict['main'] =  Main()
+	bge.logic.globalDict['refresh'] = True
+else:
+	bge.logic.globalDict['main'].perTick()
+
+if (bge.logic.globalDict.get("refresh", False) and
+		bge.logic.globalDict.get('main', False)):
+	bge.logic.globalDict['main'].refreshScene()
+	bge.logic.globalDict['refresh'] = False
