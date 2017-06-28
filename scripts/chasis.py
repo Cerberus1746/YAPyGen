@@ -1,9 +1,12 @@
-import bge, bpy, random, math
+import bge, bpy, random, math, mathutils
+import numpy as np
 import add_objects
 
 class Chasis(bge.types.KX_GameObject):
-    fitness = 0
-    
+	fitness = 0
+	maximunSpeed = 0 
+	startingCoordinate = [0,0,0]
+	
 	def __init__(self, old_owner):
 		self.piecesOptions = [ob.name for ob in bpy.context.scene.objects if ob.layers[1]]
 		self.piecesOptions.append(False)
@@ -25,6 +28,13 @@ class Chasis(bge.types.KX_GameObject):
 				)
 				DOF.setParam(3, 0.0, 0.0)
 				DOF.setParam(4, 0.0, 0.0)
+				
+	def recordFitness(self):
+		self.maximunSpeed = np.amax([
+				self.maximunSpeed,
+				self.getLinearVelocity().magnitude
+			])
+		return self.maximunSpeed
 
 	def fitness(self):
-        
+		return self.maximunSpeed
