@@ -11,17 +11,18 @@ class Chasis(bge.types.KX_GameObject):
 	def __init__(self, old_owner):
 		self.piecesOptions = [ob.name for ob in bpy.context.scene.objects if ob.layers[1]]
 		self.piecesOptions.append(False)
-		self.pieces = []
 		
 		self.Add = add_objects.Add(self)
 
 	def preBuild(self):
+		self.pieces = []
 		for slot in self.children:
 			pieceToAdd = random.choice(self.piecesOptions)
 			self.pieces.append([slot.name, pieceToAdd])
 
 	def build(self, parts):
-		for slot, part in parts:
+		self.pieces = parts
+		for slot, part in self.pieces:
 			slot = self.scene.objects[slot]
 			if part:
 				lastPiece = self.Add.inPosAndRot(part, slot.worldPosition, [0, 90, 0])
@@ -44,6 +45,7 @@ class Chasis(bge.types.KX_GameObject):
 				self.maximunSpeed,
 				self.getLinearVelocity().magnitude
 			])
+		self.pieces
 		return self.maximunSpeed
 
 	def fitness(self):
