@@ -3,6 +3,9 @@ import bge
 
 class Main():
 	vehicles = []
+	timePerSimulation = 3
+	simulationsToMake = 3
+	
 	def __init__(self):
 		bge.logic.setTimeScale(10)
 		self.startingPoint = [0,0,0.5]
@@ -26,11 +29,11 @@ class Main():
 		self.currentVehicle = recentChassi
 
 	def perTick(self):
-		if self.cam['time'] >= 3:
+		if self.cam['time'] >= self.timePerSimulation:
 			self.currentVehicle.recordFitness()
 			self.vehicles.append(self.currentVehicle)
 			
-			if len(self.vehicles) <= 3:
+			if len(self.vehicles) <= self.simulationsToMake:
 				self.sceneRestart()
 			else:
 				self.simulationEnd()
@@ -41,7 +44,7 @@ class Main():
 	
 	def simulationEnd(self):
 		for vehicle in self.vehicles:
-			print(vehicle.fitness())
+			vehicle.fitness()
 		self.scene.end()
 
 if (bge.logic.globalDict.get("refresh", False) and

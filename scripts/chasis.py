@@ -11,9 +11,9 @@ class Chasis(bge.types.KX_GameObject):
 	def __init__(self, old_owner):
 		self.piecesOptions = [ob.name for ob in bpy.context.scene.objects if ob.layers[1]]
 		self.piecesOptions.append(False)
+		self.pieces = []
 		
 		self.Add = add_objects.Add(self)
-		self.preBuild()
 
 	def preBuild(self):
 		for slot in self.children:
