@@ -5,6 +5,7 @@ class Main():
 	vehicles = []
 	def __init__(self):
 		bge.logic.setTimeScale(10)
+		self.startingPoint = [0,0,0.5]
 
 	def refreshScene(self):
 		self.scene = bge.logic.getCurrentScene()
@@ -12,17 +13,17 @@ class Main():
 		self.cam = self.sceneObjects['Camera']
 		self.adder = add_objects.Add(self.sceneObjects["Floor"])
 		
-		startingPoint = [0,0,0.5]
 		recentChassi = chasis.Chasis(self.adder.inPosAndRot(
 			"Master",
-			startingPoint,
+			self.startingPoint,
 			[0, 0, 0])
 		)
-		recentChassi.startingCoordinate = startingPoint
+		
+		
+		recentChassi.startingCoordinate = self.startingPoint
+		recentChassi.build(recentChassi.pieces)
 
 		self.currentVehicle = recentChassi
-
-		self.cam['init'] = True
 
 	def perTick(self):
 		if self.cam['time'] >= 3:
@@ -30,20 +31,26 @@ class Main():
 			self.vehicles.append(self.currentVehicle)
 			
 			if len(self.vehicles) <= 3:
-				bge.logic.globalDict['refresh'] = True
-				self.scene.restart()
+				self.sceneRestart()
 			else:
-				for vehicle in self.vehicles:
-					print(vehicle.fitness())
-				self.scene.end()
+				self.simulationEnd()
 
-if not bge.logic.globalDict.get("main", False):
-	bge.logic.globalDict['main'] =  Main()
-	bge.logic.globalDict['refresh'] = True
-else:
-	bge.logic.globalDict['main'].perTick()
+	def sceneRestart(self):
+		bge.logic.globalDict['refresh'] = True
+		self.scene.restart()
+	
+	def simulationEnd(self):
+		for vehicle in self.vehicles:
+			print(vehicle.fitness())
+		self.scene.end()
 
 if (bge.logic.globalDict.get("refresh", False) and
 		bge.logic.globalDict.get('main', False)):
 	bge.logic.globalDict['main'].refreshScene()
 	bge.logic.globalDict['refresh'] = False
+
+if not bge.logic.globalDict.get("main", False):
+	bge.logic.globalDict['main'] =  Main()
+	bge.logic.globalDict['main'].refreshScene()
+else:
+	bge.logic.globalDict['main'].perTick()
