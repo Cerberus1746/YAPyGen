@@ -3,16 +3,16 @@ import bge
 
 class Main():
 	timePerSimulation = 3
-	simulationsToMake = 1
+	simulationsToMake = 3
 	maxCycle = 2
 	startingPoint = [0,0,0.5]
 
 	vehicleNumber = 0
 	simulationCycle = 0
-	
+
 	vehicles = []
 	vehiclesStats = []
-	
+
 	def __init__(self):
 		bge.logic.setTimeScale(5)
 
@@ -28,19 +28,16 @@ class Main():
 			[0, 0, 0])
 		)
 		recentChassi.startingCoordinate = self.startingPoint
-		
-		
+
 		if self.simulationCycle == 0:
 			recentChassi.preBuild()
 			recentChassi.build(recentChassi.pieces)
 			
 			print("Vehicle Created:\n" + str(recentChassi.pieces))
-		elif self.simulationCycle > 0:
+		else:
 			recentChassi.build(self.vehiclesStats[self.vehicleNumber][1])
 			
 			print("Using Vehicle:\n" + str(self.vehiclesStats[self.vehicleNumber][1]))
-		else:
-			print("Shouldn't be shown")
 
 		self.currentVehicle = recentChassi
 
@@ -53,15 +50,14 @@ class Main():
 			self.currentVehicle.recordFitness()
 			self.vehicles.append(self.currentVehicle)
 			
-			if self.vehicleNumber == self.simulationsToMake:
-				self.simulationEnd()
-			elif self.vehicleNumber < self.simulationsToMake:
+			self.vehicleNumber += 1
+			
+			if self.vehicleNumber < self.simulationsToMake:
 				self.sceneRestart()
 			else:
-				print("Shouldn't be shown")
+				self.simulationEnd()
 
 	def sceneRestart(self):
-		self.vehicleNumber += 1
 		self.scene.restart()
 
 	def simulationEnd(self):
@@ -83,16 +79,14 @@ class Main():
 		
 		self.vehicles = []
 		print("\n\nSimulation Cycle End:\n" + str(self.vehiclesStats))
-
-		if self.simulationCycle == self.maxCycle:
-			self.simulationCycle = 0
-			self.scene.end()
-		elif self.simulationCycle < self.maxCycle:
-			self.scene.restart()
-		else:
-			print("Shouldn't be shown")
 		
 		self.simulationCycle += 1
+
+		if self.simulationCycle < self.maxCycle:
+			self.scene.restart()
+		else:
+			self.simulationCycle = 0
+			self.scene.end()
 
 if (bge.logic.globalDict.get("refresh", False) and
 		bge.logic.globalDict.get('main', False)):
