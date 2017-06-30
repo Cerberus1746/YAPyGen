@@ -18,31 +18,28 @@ class Chasis(bge.types.KX_GameObject):
 		self.pieces = []
 		for slot in self.children:
 			pieceToAdd = random.choice(self.piecesOptions)
-			self.pieces.append([slot.name, pieceToAdd])
+			self.pieces.append(pieceToAdd)
 
 	def build(self, parts):
 		self.pieces = parts
-		try:
-			for slot, part in self.pieces:
-				slot = self.scene.objects[slot]
-				if part:
-					lastPiece = self.Add.inPosAndRot(part, slot.worldPosition, [0, 90, 0])
+		for n in range(len(parts)):
+			slot = self.children[n]
+			part = self.pieces[n]
+			if part:
+				lastPiece = self.Add.inPosAndRot(part, slot.worldPosition, [0, 90, 0])
 
-					lastPiecePhysics = lastPiece.getPhysicsId()
+				lastPiecePhysics = lastPiece.getPhysicsId()
 
-					#create 6 Degress of Freedom Constraint
-					DOF = bge.constraints.createConstraint(
-						lastPiecePhysics,
-						self.getPhysicsId(),
-						bge.constraints.GENERIC_6DOF_CONSTRAINT,
-						flag = 128
-					)
-					DOF.setParam(3, 0.0, 0.0) #Lock rotation in X axis
-					DOF.setParam(4, 0.0, 0.0) #Lock rotation in Y axis
-					#To lock axis Z if necessary: DOF.setParam(4, 0.0, 0.0)
-		except ValueError:
-			print("#" * 10 + "VALUE ERROR FOUND" + "#" * 10)
-			print(self.pieces)
+				#create 6 Degress of Freedom Constraint
+				DOF = bge.constraints.createConstraint(
+					lastPiecePhysics,
+					self.getPhysicsId(),
+					bge.constraints.GENERIC_6DOF_CONSTRAINT,
+					flag = 128
+				)
+				DOF.setParam(3, 0.0, 0.0) #Lock rotation in X axis
+				DOF.setParam(4, 0.0, 0.0) #Lock rotation in Y axis
+				#To lock axis Z if necessary: DOF.setParam(4, 0.0, 0.0)
 				
 	def recordFitness(self):
 		self.maximunSpeed = np.amax([

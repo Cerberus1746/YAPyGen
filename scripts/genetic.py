@@ -13,9 +13,10 @@ class Genetic():
         if totalPopulation == 0:
             return filteredPopulation
         
-        populationFilter = int(len(self.species) / 2)
+        populationFilter = int(len(self.species) / 2) + random.randint(0, 2)
 
         filteredPopulation = self.species[:populationFilter]
+        filteredPopulation.append(self.species[-random.randint(2, 3)])
         
         while len(filteredPopulation) != totalPopulation:
             father = random.choice(filteredPopulation)
@@ -24,20 +25,22 @@ class Genetic():
             child = [min([father[0], mother[0]])]
     
             dividerPoint = int(len(father[1]) / 2)
-            
-            child.append(mother[1][:dividerPoint] + father[1][dividerPoint:])
+            if random.randint(0, 1):
+                child.append(mother[1][:dividerPoint] + father[1][dividerPoint:])
+            else:
+                child.append(father[1][:dividerPoint] + mother[1][dividerPoint:])
             filteredPopulation.append(child)
 
         return filteredPopulation
 
 if __name__ == '__main__':
     population = [
-        [7.269671401648707,     [['Cube.004', 'Wheel'], ['Cube.003', 'Wheel'], ['Cube.002', 'Wheel'], ['Cube.001', 'Wheel']]],
-        [7.2078545389380757,    [['Cube.004', 'Wheel'], ['Cube.003', False], ['Cube.002', 'Wheel'], ['Cube.001', 'Wheel']]],
-        [5.325168709325296,     [['Cube.004', 'Wheel'], ['Cube.003', 'Wheel'], ['Cube.002', False], ['Cube.001', 'Wheel']]],
-        [5.325168709325296,     [['Cube.004', False], ['Cube.003', 'Wheel'], ['Cube.002', False], ['Cube.001', 'Wheel']]],
-        [0,                     [['Cube.004', False], ['Cube.003', False], ['Cube.002', False], ['Cube.001', False]]]
-    ]
+            [8.2092895426450347, ['Wheel', 'Wheel', 'Wheel', 'Wheel', 'Wheel', 'Wheel']],
+            [7.4524994882128963, ['Wheel', 'Wheel', 'Wheel', False, 'Wheel', 'Wheel']],
+            [6.5146376491401679, ['Wheel', 'Wheel', False, 'Wheel', False, 'Wheel']],
+            [7.4524994882128963, ['Wheel', 'Wheel', 'Wheel', False, 'Wheel', 'Wheel']],
+            [7.4524994882128963, ['Wheel', 'Wheel', 'Wheel', False, 'Wheel', 'Wheel']]
+        ]
     geneticModule = Genetic(population)
     geneticModule.population()
     for i in geneticModule.population():
