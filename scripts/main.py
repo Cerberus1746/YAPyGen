@@ -2,10 +2,10 @@ import add_objects, chasis, genetic
 import bge
 
 class Main():
-	timePerSimulation = 5
-	simulationsToMake = 5
+	timePerSimulation = 3
+	simulationsToMake = 10
 	maxCycle = 5
-	timeScale = 2
+	timeScale = 5
 	startingPoint = [0,0,0.5]
 
 	vehicleNumber = 0
@@ -43,6 +43,7 @@ class Main():
 		self.currentVehicle = recentChassi
 
 	def perTick(self):
+		self.currentVehicle.recordFitness()
 		if self.cam['time'] >= self.timePerSimulation:
 			self.cam['time'] = 0.0
 
@@ -50,6 +51,7 @@ class Main():
 			
 			self.currentVehicle.recordFitness()
 			self.vehicles.append(self.currentVehicle)
+			print(self.currentVehicle.fitness())
 			
 			self.vehicleNumber += 1
 			

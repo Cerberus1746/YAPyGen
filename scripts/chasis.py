@@ -42,11 +42,15 @@ class Chasis(bge.types.KX_GameObject):
 				#To lock axis Z if necessary: DOF.setParam(4, 0.0, 0.0)
 				
 	def recordFitness(self):
-		self.maximunSpeed = np.amax([
+		self.maximunSpeed = max([
 				self.maximunSpeed,
-				self.getLinearVelocity().magnitude
+				#self.getLinearVelocity().magnitude,
+				#self.worldPosition.y - abs(self.worldPosition.x),
+				self.worldPosition.z - abs(self.worldPosition.x),
+				#abs(self.worldPosition.x)
 			])
-		self.pieces
+		'''if False in self.pieces:
+			self.maximunSpeed = self.maximunSpeed / self.pieces.count(False)'''
 		return self.maximunSpeed
 
 	def fitness(self):
