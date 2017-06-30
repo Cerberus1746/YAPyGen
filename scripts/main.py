@@ -1,9 +1,9 @@
-import add_objects, chasis
+import add_objects, chasis, genetic
 import bge
 
 class Main():
 	timePerSimulation = 3
-	simulationsToMake = 3
+	simulationsToMake = 5
 	maxCycle = 2
 	startingPoint = [0,0,0.5]
 
@@ -62,7 +62,6 @@ class Main():
 
 	def simulationEnd(self):
 		self.vehicleNumber = 0
-
 		self.vehiclesStats = []
 
 		for vehicle in self.vehicles:
@@ -76,6 +75,11 @@ class Main():
 			reverse=True,
 			key=lambda vehicle: vehicle[0]
 		)
+		
+		geneticModule = genetic.Genetic(self.vehiclesStats)
+		self.vehiclesStats = geneticModule.population()
+		
+		self.simulationsToMake = len(self.vehiclesStats)
 		
 		self.vehicles = []
 		print("\n\nSimulation Cycle End:\n" + str(self.vehiclesStats))

@@ -3,4 +3,8 @@ class Genetic():
         self.species = species
     
     def population(self):
-        return self.species
+        filteredPopulation = []
+        for specie in self.species:
+            if specie[0] > 1:
+                filteredPopulation.append(specie)
+        return filteredPopulation
