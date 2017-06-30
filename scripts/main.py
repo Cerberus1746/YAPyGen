@@ -2,9 +2,10 @@ import add_objects, chasis, genetic
 import bge
 
 class Main():
-	timePerSimulation = 3
+	timePerSimulation = 5
 	simulationsToMake = 5
-	maxCycle = 2
+	maxCycle = 5
+	timeScale = 2
 	startingPoint = [0,0,0.5]
 
 	vehicleNumber = 0
@@ -14,7 +15,7 @@ class Main():
 	vehiclesStats = []
 
 	def __init__(self):
-		bge.logic.setTimeScale(5)
+		bge.logic.setTimeScale(self.timeScale)
 
 	def refreshScene(self):
 		self.scene = bge.logic.getCurrentScene()
