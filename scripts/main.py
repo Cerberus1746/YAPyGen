@@ -1,10 +1,13 @@
 import add_objects, chasis, genetic
 import bge
 
-class Main():
+#Better:[3561.5621985477046, ['FastWheel', 'FastWheel', 'FastWheel', 'ZeroWheel'], {'child': True, 'mutation': True, 'age': 5, 'species': 'FasFasFasZer'}]
+#Better:[6369.298383083718, ['FastWheel', 'FastWheel', 'SlowWheel', 'ZeroWheel'], {'child': True, 'mutation': True, 'age': 5, 'species': 'FasFasSloZer'}]
+
+class Main(genetic.Genetic):
 	timePerSimulation = 3
 	simulationsToMake = 10
-	maxCycle = 5
+	maxCycle = 15
 	timeScale = 5
 	startingPoint = [0,0,0.5]
 
@@ -12,10 +15,10 @@ class Main():
 	simulationCycle = 0
 
 	vehicles = []
-	vehiclesStats = []
 
 	def __init__(self):
 		bge.logic.setTimeScale(self.timeScale)
+		self.maxSpecieAge = 5
 
 	def refreshScene(self):
 		self.scene = bge.logic.getCurrentScene()
@@ -32,13 +35,17 @@ class Main():
 
 		if self.simulationCycle == 0:
 			recentChassi.preBuild()
-			recentChassi.build(recentChassi.pieces)
 			
 			print("Vehicle Created:\n" + str(recentChassi.pieces))
+			print(recentChassi.characteristicsDict)
 		else:
-			recentChassi.build(self.vehiclesStats[self.vehicleNumber][1])
+			recentChassi.build(
+				self.allPopulation[self.vehicleNumber][1],
+				self.allPopulation[self.vehicleNumber][2]
+			)
 			
-			print("Using Vehicle:\n" + str(self.vehiclesStats[self.vehicleNumber][1]))
+			print("Using Vehicle:\n" + 	str(self.allPopulation[self.vehicleNumber][1]))
+			print(str(self.allPopulation[self.vehicleNumber][2]))
 
 		self.currentVehicle = recentChassi
 
@@ -70,22 +77,29 @@ class Main():
 		for vehicle in self.vehicles:
 			self.vehiclesStats.append([
 				vehicle.fitness(),
-				vehicle.pieces
+				vehicle.pieces,
+				vehicle.characteristicsDict
 			])
 
-		self.vehiclesStats = sorted(
+		self.allPopulation = sorted(
 			self.vehiclesStats,
 			reverse=True,
 			key=lambda vehicle: vehicle[0]
 		)
+		print("\n\nPre Filter:\n" + str(self.allPopulation))
 		
-		geneticModule = genetic.Genetic(self.vehiclesStats)
-		self.vehiclesStats = geneticModule.population()
+		self.createPopulation()
 		
-		self.simulationsToMake = len(self.vehiclesStats)
+		self.simulationsToMake = len(self.allPopulation)
 		
 		self.vehicles = []
-		print("\n\nSimulation Cycle End:\n" + str(self.vehiclesStats))
+		print("\nAfter Filter:" + str(self.allPopulation))
+		
+		print("\nBetter:" + str(self.better))
+		
+		if self.better[2]["age"] >= self.maxSpecieAge:
+			self.scene.end()
+		
 		
 		self.simulationCycle += 1
 
