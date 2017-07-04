@@ -2,45 +2,37 @@ import bge, bpy, random, mathutils
 import numpy as np
 import add_objects, genetic_object
 
-#Better:[62.72278553864362, ['FastWheel', 'FastWheel', 'FastWheel', 'FastWheel'], {'child': True, 'age': 5, 'species': 'FasFasFasFas'}]
-#Better:[62.72278553864362, ['FastWheel', 'FastWheel', 'FastWheel', 'FastWheel'], {'child': True, 'mutation': True, 'age': 5, 'species': 'FasFasFasFas'}]
-#Better:[62.72278553864362, ['FastWheel', 'FastWheel', 'FastWheel', 'FastWheel'], {'species': 'FasFasFasFas', 'primordial': True, 'age': 5}]
-#Better:[62.72278553864362, ['FastWheel', 'FastWheel', 'FastWheel', 'FastWheel'], {'species': 'FasFasFasFas', 'primordial': True, 'age': 5}]
-#Better:[24.47828878089763, ['FastWheel', 'FastWheel', 'SlowWheel', 'ZeroWheel'], {'child': True, 'mutation': True, 'age': 5, 'species': 'FasFasSloZer'}]
-class Chasis(bge.types.KX_GameObject, genetic_object.Specie):
-	maximunSpeed = 0 
+class Chasis(bge.types.KX_GameObject):
 	startingCoordinate = [0,0,0]
-	pieces = []
-	characteristicsDict = {}
+	geneticObject = None
 	
-	def __init__(self, old_owner):
-		self.piecesOptions = [ob.name for ob in bpy.context.scene.objects if ob.layers[1]]
+	def __init__(self, _, useOldObject = False):
 		self.Add = add_objects.Add(self)
+		
+		if useOldObject:
+			self.geneticObject = useOldObject
+		else:
+			self.geneticObject = genetic_object.Specie()
+			self.piecesOptions = [ob.name for ob in bpy.context.scene.objects if ob.layers[1]]
+	
+	def __str__(self):
+		return str(self.__dict__)
 
 	def preBuild(self):
-		self.pieces = []
-
-		for slot in self.children:
+		self.geneticObject.chromosomes = []
+		for _ in self.children:
 			pieceToAdd = random.choice(self.piecesOptions)
-			self.pieces.append(pieceToAdd)
-			
-		self.characteristicsDict = {
-			"primordial" : True,
-			"age": 0,
-			"species" : "".join(sorted([str(x)[0:3] for x in self.pieces]))
-		}
+			self.geneticObject.chromosomes.append(pieceToAdd)
 
-		self.build(self.pieces, self.characteristicsDict)
-		
-		
+		self.geneticObject.primordial = True
+		self.geneticObject.age = 0
+		self.geneticObject.createName()
 
-	def build(self, parts, characteristicsDict):
-		self.pieces = parts
-		self.characteristicsDict = characteristicsDict
+	def build(self):
 		for n in range(len(self.children)):
 			slot = self.children[n]
 			try:
-				part = self.pieces[n]
+				part = self.geneticObject.chromosomes[n]
 			except IndexError:
 				part = False
 			if part:
@@ -60,15 +52,11 @@ class Chasis(bge.types.KX_GameObject, genetic_object.Specie):
 				#To lock axis Z if necessary: DOF.setParam(4, 0.0, 0.0)
 				
 	def recordFitness(self):
-		self.maximunSpeed = max([
-				self.maximunSpeed,
+		self.geneticObject.fitness = max([
+				self.geneticObject.fitness,
 				#self.getLinearVelocity().magnitude - abs(self.worldPosition.x)
 				#self.worldPosition.y - abs(self.worldPosition.x),
-				abs(self.worldPosition.x) * abs(self.worldPosition.z),
+				abs(self.worldPosition.z),
 			])
-		'''if False in self.pieces:
-			self.maximunSpeed = self.maximunSpeed / self.pieces.count(False)'''
-		return self.maximunSpeed
 
-	def fitness(self):
-		return self.maximunSpeed
+		return self.geneticObject.fitness

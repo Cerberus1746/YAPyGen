@@ -1,17 +1,14 @@
 import add_objects, chasis, genetic
 import bge
 
-#Better:[3561.5621985477046, ['FastWheel', 'FastWheel', 'FastWheel', 'ZeroWheel'], {'child': True, 'mutation': True, 'age': 5, 'species': 'FasFasFasZer'}]
-#Better:[6369.298383083718, ['FastWheel', 'FastWheel', 'SlowWheel', 'ZeroWheel'], {'child': True, 'mutation': True, 'age': 5, 'species': 'FasFasSloZer'}]
-
-class Main(genetic.Genetic):
+class Main():
 	timePerSimulation = 3
-	simulationsToMake = 10
-	maxCycle = 15
+	simulationsToMake = 5
+	maxCycle = 50
 	timeScale = 5
 	startingPoint = [0,0,0.5]
 
-	vehicleNumber = 0
+	actualCycle = 0
 	simulationCycle = 0
 
 	vehicles = []
@@ -19,6 +16,8 @@ class Main(genetic.Genetic):
 	def __init__(self):
 		bge.logic.setTimeScale(self.timeScale)
 		self.maxSpecieAge = 5
+		self.genetics = genetic.Genetic()
+		genetic.Genetic.__init__(self)
 
 	def refreshScene(self):
 		self.scene = bge.logic.getCurrentScene()
@@ -26,43 +25,33 @@ class Main(genetic.Genetic):
 		self.cam = self.sceneObjects['Camera']
 		self.adder = add_objects.Add(self.sceneObjects["Floor"])
 		
-		recentChassi = chasis.Chasis(self.adder.inPosAndRot(
-			"Master",
-			self.startingPoint,
-			[0, 0, 0])
-		)
-		recentChassi.startingCoordinate = self.startingPoint
-
+		chassisAdded = self.adder.inPosAndRot("Master", self.startingPoint,	[0, 0, 0])
+		
 		if self.simulationCycle == 0:
-			recentChassi.preBuild()
-			
-			print("Vehicle Created:\n" + str(recentChassi.pieces))
-			print(recentChassi.characteristicsDict)
+			newVehicle = chasis.Chasis(chassisAdded)
+			newVehicle.preBuild()
 		else:
-			recentChassi.build(
-				self.allPopulation[self.vehicleNumber][1],
-				self.allPopulation[self.vehicleNumber][2]
-			)
-			
-			print("Using Vehicle:\n" + 	str(self.allPopulation[self.vehicleNumber][1]))
-			print(str(self.allPopulation[self.vehicleNumber][2]))
+			newVehicle = chasis.Chasis(chassisAdded, self.genetics.allPopulation[self.actualCycle])
 
-		self.currentVehicle = recentChassi
+		newVehicle.startingCoordinate = self.startingPoint
+		newVehicle.build()
+
+		self.currentVehicle = newVehicle
 
 	def perTick(self):
 		self.currentVehicle.recordFitness()
 		if self.cam['time'] >= self.timePerSimulation:
 			self.cam['time'] = 0.0
-
 			bge.logic.globalDict['refresh'] = True
-			
+
 			self.currentVehicle.recordFitness()
-			self.vehicles.append(self.currentVehicle)
-			print(self.currentVehicle.fitness())
 			
-			self.vehicleNumber += 1
+			if self.simulationCycle == 0:
+				self.genetics.allPopulation.append(self.currentVehicle.geneticObject)
 			
-			if self.vehicleNumber < self.simulationsToMake:
+			self.actualCycle += 1
+			
+			if self.actualCycle < self.simulationsToMake:
 				self.sceneRestart()
 			else:
 				self.simulationEnd()
@@ -71,35 +60,24 @@ class Main(genetic.Genetic):
 		self.scene.restart()
 
 	def simulationEnd(self):
-		self.vehicleNumber = 0
-		self.vehiclesStats = []
-
-		for vehicle in self.vehicles:
-			self.vehiclesStats.append([
-				vehicle.fitness(),
-				vehicle.pieces,
-				vehicle.characteristicsDict
-			])
-
-		self.allPopulation = sorted(
-			self.vehiclesStats,
-			reverse=True,
-			key=lambda vehicle: vehicle[0]
-		)
-		print("\n\nPre Filter:\n" + str(self.allPopulation))
+		self.actualCycle = 0
 		
-		self.createPopulation()
+		print("\n" + "#" * 10 + " Cycle Number: " + str(self.simulationCycle) + " " + "#" * 10)
+				
+		[print(x) for x in self.genetics.allPopulation]
 		
-		self.simulationsToMake = len(self.allPopulation)
+		self.genetics.createPopulation()
 		
-		self.vehicles = []
-		print("\nAfter Filter:" + str(self.allPopulation))
+		print("\n" + "#" * 5 + " After Filter: " + "#" * 5)
 		
-		print("\nBetter:" + str(self.better))
+		[print(x) for x in self.genetics.allPopulation]
 		
-		if self.better[2]["age"] >= self.maxSpecieAge:
+		print("Better: " + str(self.genetics.better))
+		
+		self.simulationsToMake = len(self.genetics.allPopulation)
+		
+		if self.genetics.better.age >= self.maxSpecieAge:
 			self.scene.end()
-		
 		
 		self.simulationCycle += 1
 

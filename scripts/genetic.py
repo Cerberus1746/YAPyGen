@@ -1,5 +1,5 @@
 import random
-import genetic_object
+from genetic_object import Specie
 
 def defineCharacteristics(specieValues, **kwargs):
     for key, value in kwargs.items():
@@ -8,35 +8,46 @@ def defineCharacteristics(specieValues, **kwargs):
 
 class Genetic():
     allPopulation = []
-    better = [0,0]
+    better = None
     maxSpecieAge = 5
     minimunParts = 3
+    
+    def __init__(self):
+        self.better = Specie()
 
     def tournament(self, *species):
-        fitnessList = sorted([specie[0] for specie in species])
+        fitnessList = sorted([specie.fitness for specie in species])
         for specie in species:
-            if specie[0] == fitnessList[0]:
+            if specie.fitness == fitnessList[0]:
                 return specie
 
     def mutate(self, specie):
-        newSpecie = list(reversed(specie[1]))
+        specie.chromosomes = list(reversed(specie.chromosomes))
+        specie.mutation = True
 
-        return [0, newSpecie, specie[2]]
+        return specie
     
     def rouletteChoice(self, population):
-        maxFitness = sum([specie[0] for specie in population])
+        maxFitness = sum([specie.fitness for specie in population])
         pick = random.uniform(0, maxFitness)
         current = 0
         for specie in population:
-            current += specie[0]
+            current += specie.fitness
             if current > pick:
                 return specie
 
     def chooseParent(self, population):
         father = mother = []
-        while father == mother:
-            father = self.rouletteChoice(population)
-            mother = self.rouletteChoice(population)
+        if len(population) > 2:
+            while father == mother:
+                father = self.rouletteChoice(population)
+                mother = self.rouletteChoice(population)
+            
+        elif len(population) == 2:
+            father = population[0]
+            mother = population[1]
+        else: 
+            mother = father = population[0]
 
         return (father, mother)
 
@@ -45,24 +56,24 @@ class Genetic():
             def chunksDivider(listValues, chunkSize):
                 return [listValues[i:i + chunkSize] for i in range(0, len(listValues), chunkSize)]
     
-            child = []
+            child = Specie()
+            freeChunks = []
     
-            fatherChunks = chunksDivider(father[1], 1)
-            motherChunks = chunksDivider(mother[1], 1)
-    
+            fatherChunks = chunksDivider(father.chromosomes, 1)
+            motherChunks = chunksDivider(mother.chromosomes, 1)
+            
             for chunkNumber in range(len(list(fatherChunks))):
                 if random.randint(0, 1):
-                    child.append(list(fatherChunks)[chunkNumber])
+                    freeChunks.append(list(fatherChunks)[chunkNumber])
                 else:
-                    child.append(list(motherChunks)[chunkNumber])
-    
-            child = sum(child, [])
-            child = [0, child, {"child" : True, "species" : "".join(sorted([str(x)[0:3] for x in child]))}]
+                    freeChunks.append(list(motherChunks)[chunkNumber])
             
-            defineCharacteristics(child, age = 0)
+            child.chromosomes = sum(list(freeChunks), [])
+            
+            child.child = True
     
             if random.randint(0, 100) <= 20:
-                child = defineCharacteristics(self.mutate(child), mutation = True)
+                child = self.mutate(child)
     
             return child
         except IndexError:
@@ -71,25 +82,27 @@ class Genetic():
 
     def createPopulation(self):
         totalPopulation = len(self.allPopulation)
-        
-        populationFilter = (
-            int(len(self.allPopulation) * 0.3) +
-            random.randint(0, int(len(self.allPopulation) * 0.20))
+
+        self.allPopulation = sorted(
+            self.allPopulation,
+            reverse=True,
+            key=lambda specie: specie.fitness
         )
 
-        filteredPopulation = []
-        for specie in self.allPopulation[:populationFilter]:
-            if specie[2]["age"] < self.maxSpecieAge and len(specie[1]) >= self.minimunParts:
-                filteredPopulation.append(specie)
+        populationFilter = (int(len(self.allPopulation) * 0.5))
 
-        for n in range(len(filteredPopulation)):
-            filteredPopulation[n][2]["age"] += 1
+        newPopulation = []
+        for specie in self.allPopulation[:populationFilter]:
+            if specie.age < self.maxSpecieAge and len(specie.chromosomes) >= self.minimunParts:
+                newPopulation.append(specie)
+                
+
+        for n in range(len(newPopulation)):
+            newPopulation[n].age += 1
         
-        if self.allPopulation[0][0] > self.better[0]:
+        if self.allPopulation[0].fitness > self.better.fitness:
             self.better = self.allPopulation[0]
         
-        newPopulation = filteredPopulation
-
         maxLoop = 0
         while len(newPopulation) < totalPopulation:
             father, mother = self.chooseParent(self.allPopulation)
@@ -105,8 +118,24 @@ class Genetic():
 
 if __name__ == '__main__':
     geneticModule = Genetic()
-    geneticModule.allPopulation = [[8.265524713686293, ['wheelSlow', 'wheelFast', 'wheelFast', 'wheelFast'], {'age': 0, 'primordial': True}], [6.419438942671523, ['wheelSlow', 'none', 'none', 'wheelSlow'], {'age': 0, 'primordial': True}], [5.976333470045203, ['none', 'wheelFast', False, 'wheelFast'], {'age': 0, 'primordial': True}], [4.714227811853874, ['wheelFast', 'wheelFast', 'none', 'wheelSlow'], {'age': 0, 'primordial': True}], [4.482450498839169, ['none', 'wheelFast', 'wheelSlow', 'none'], {'age': 0, 'primordial': True}], [4.313566315963144, ['none', 'wheelSlow', False, 'wheelSlow'], {'age': 0, 'primordial': True}], [3.9939199693133602, ['wheelSlow', False, 'none', 'wheelSlow'], {'age': 0, 'primordial': True}], [3.3443714369845763, ['wheelSlow', 'wheelSlow', 'none', False], {'age': 0, 'primordial': True}], [3.1471945051321697, ['wheelSlow', 'none', 'wheelSlow', False], {'age': 0, 'primordial': True}], [3.0581027916275207, ['wheelFast', False, 'wheelSlow', 'none'], {'age': 0, 'primordial': True}], [3.030021886784759, ['wheelSlow', 'none', 'none', 'none'], {'age': 0, 'primordial': True}], [2.712929452799508, ['wheelFast', 'none', 'none', 'none'], {'age': 0, 'primordial': True}], [2.604375134047834, [False, 'none', 'wheelSlow', 'none'], {'age': 0, 'primordial': True}], [2.0014527878808157, ['none', False, 'wheelSlow', False], {'age': 0, 'primordial': True}], [1.6315843992109809, [False, False, 'wheelFast', 'wheelFast'], {'age': 0, 'primordial': True}]]
+    partsOptions = ['wheelSlow', 'wheelFast', 'wheelNone']
+    population = []
+    
+    for i in range(5):
+        specie = Specie()
+        specie.fitness = i
+        specie.chromosomes = []
+        specie.age = i if i < 10 else 3
+        for _ in range(4):
+            specie.chromosomes.append(random.choice(partsOptions))
+        
+        specie.speciesName = "".join(sorted([str(x)[0:3] for x in specie.chromosomes]))
+        
+        population.append(specie)
+
+    geneticModule.allPopulation = population
     for i in geneticModule.createPopulation():
         print(i)
         #pass
+    
     print("Better: " + str(geneticModule.better))
