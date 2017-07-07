@@ -5,6 +5,7 @@ class Specie():
     primordial = False
     speciesName = ""
     child = False
+    conditionsMet = False
     
     def __str__(self):
         return str(self.__dict__)

@@ -1,23 +1,22 @@
-import add_objects, chasis, genetic
+import add_objects, chasis
+from genetic.population import Population
 import bge
 
 class Main():
-	timePerSimulation = 3
+	timePerSimulation = 4
 	simulationsToMake = 5
 	maxCycle = 50
-	timeScale = 5
+	timeScale = 1
 	startingPoint = [0,0,0.5]
+	resetSimulations = False
 
 	actualCycle = 0
 	simulationCycle = 0
 
-	vehicles = []
-
 	def __init__(self):
 		bge.logic.setTimeScale(self.timeScale)
-		self.maxSpecieAge = 5
-		self.genetics = genetic.Genetic()
-		genetic.Genetic.__init__(self)
+		self.population = Population()
+		self.population.maxSpecieAge = 5
 
 	def refreshScene(self):
 		self.scene = bge.logic.getCurrentScene()
@@ -27,11 +26,11 @@ class Main():
 		
 		chassisAdded = self.adder.inPosAndRot("Master", self.startingPoint,	[0, 0, 0])
 		
-		if self.simulationCycle == 0:
+		if self.simulationCycle == 0 or len(self.population.allPopulation) < self.simulationsToMake:
 			newVehicle = chasis.Chasis(chassisAdded)
 			newVehicle.preBuild()
 		else:
-			newVehicle = chasis.Chasis(chassisAdded, self.genetics.allPopulation[self.actualCycle])
+			newVehicle = chasis.Chasis(chassisAdded, self.population.allPopulation[self.actualCycle])
 
 		newVehicle.startingCoordinate = self.startingPoint
 		newVehicle.build()
@@ -46,8 +45,8 @@ class Main():
 
 			self.currentVehicle.recordFitness()
 			
-			if self.simulationCycle == 0:
-				self.genetics.allPopulation.append(self.currentVehicle.geneticObject)
+			if self.simulationCycle == 0 or len(self.population.allPopulation) < self.simulationsToMake:
+				self.population.allPopulation.append(self.currentVehicle.geneticObject)
 			
 			self.actualCycle += 1
 			
@@ -64,19 +63,19 @@ class Main():
 		
 		print("\n" + "#" * 10 + " Cycle Number: " + str(self.simulationCycle) + " " + "#" * 10)
 				
-		[print(x) for x in self.genetics.allPopulation]
+		[print(x) for x in self.population.allPopulation]
 		
-		self.genetics.createPopulation()
+		self.population.createPopulation()
 		
 		print("\n" + "#" * 5 + " After Filter: " + "#" * 5)
 		
-		[print(x) for x in self.genetics.allPopulation]
+		[print(x) for x in self.population.allPopulation]
 		
-		print("Better: " + str(self.genetics.better))
+		print("Better: " + str(self.population.better))
 		
-		self.simulationsToMake = len(self.genetics.allPopulation)
+		self.simulationsToMake = len(self.population.allPopulation)
 		
-		if self.genetics.better.age >= self.maxSpecieAge:
+		if self.population.better.age >= self.population.maxSpecieAge and self.population.better.conditionsMet:
 			self.scene.end()
 		
 		self.simulationCycle += 1
