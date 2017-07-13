@@ -68,7 +68,7 @@ class Main():
 		self.population.createPopulation()
 		
 		print("\n" + "#" * 5 + " After Filter: " + "#" * 5)
-		
+
 		[print(x) for x in self.population.allPopulation]
 		
 		print("Better: " + str(self.population.better))
@@ -86,14 +86,18 @@ class Main():
 			self.simulationCycle = 0
 			self.scene.end()
 
-if (bge.logic.globalDict.get("refresh", False) and
-		bge.logic.globalDict.get('main', False)):
-	bge.logic.globalDict['main'].refreshScene()
-	bge.logic.globalDict['refresh'] = False
+try:
+	if (bge.logic.globalDict.get("refresh", False) and
+			bge.logic.globalDict.get('main', False)):
+		bge.logic.globalDict['main'].refreshScene()
+		bge.logic.globalDict['refresh'] = False
 
-elif not bge.logic.globalDict.get("main", False):
-	bge.logic.globalDict['main'] =  Main()
-	bge.logic.globalDict['main'].refreshScene()
+	elif not bge.logic.globalDict.get("main", False):
+		bge.logic.globalDict['main'] =  Main()
+		bge.logic.globalDict['main'].refreshScene()
 
-else:
-	bge.logic.globalDict['main'].perTick()
+	else:
+		bge.logic.globalDict['main'].perTick()
+except:
+	bge.logic.getCurrentScene().end()
+	raise
