@@ -1,22 +1,34 @@
-import random
-import genetic.selectors as sel
+import copy
 
+import genetic.selectors as sel
 from genetic.specie import Specie
+import numpy as np
+
+
+class NoFitnessValue(Exception):
+    pass
+
+
+class NoChromosomes(Exception):
+    pass
 
 
 class Population():
-    allPopulation = []
+    allPopulation = np.empty(0, dtype=Specie)
     better = None
-    maxSpecieAge = 10
-    minimunParts = 3
+    maxSpecieAge = 5
+    historic = list()
     
+    namesOptions = ["buffalo", "dog", "cat", "merkat", "dolphin", "croc", "alpaca", "raven"]
+
     def __init__(self):
         self.better = Specie()
+        self.better.fitness = np.NINF
 
     def mutate(self, specie):
-        l = []
-        for g in sel.chunksDivider(specie.chromosomes, 2):
-            l.extend(i for i in reversed(g))
+        l = np.empty(0)
+        for g in np.array_split(specie.chromosomes, 3):
+            l = np.append(l, g[::-1])
 
         specie.chromosomes = l
         specie.mutation = True
@@ -24,104 +36,122 @@ class Population():
         return specie
 
     def chooseParent(self, population):
-        father = mother = []
-        if len(population) > 2:
-            while father == mother:
-                father = sel.rouletteChoice(population)
-                mother = sel.rouletteChoice(population)
-            
-        elif len(population) == 2:
-            father = population[0]
-            mother = population[1]
-        else: 
-            mother = father = population[0]
+        father = mother = None
+        while father == mother:
+            father = sel.tournament(population, 1)[0]
+            mother = sel.tournament(population, 1)[0]
 
         return (father, mother)
 
     def crossOver(self, father, mother):
+        chromosomesCount = len(father.chromosomes)
+        child = copy.deepcopy(father)
 
-        child = Specie()
-        freeChunks = []
-
-        fatherChunks = sel.chunksDivider(father.chromosomes, 1)
-        motherChunks = sel.chunksDivider(mother.chromosomes, 1)
-        
-        for chunkNumber in range(len(list(fatherChunks))):
-            if random.randint(0, 1):
-                freeChunks.append(list(fatherChunks)[chunkNumber])
-            else:
-                freeChunks.append(list(motherChunks)[chunkNumber])
-        
-        child.chromosomes = sum(list(freeChunks), [])
-        child.createName()
-        
+        child.fitness = np.NINF
+        child.chromosomes = np.empty(0)
+        child.age = 0
+        child.primordial = False
         child.child = True
+        child.conditionsMet = False
+        child.father = father
+        child.mother = mother
+        
+        '''if father.speciesName != mother.speciesName:
+            child.createName(self.namesOptions)'''
 
-        if random.randint(0, 100) <= 20:
+        while len(child.chromosomes) != chromosomesCount:
+            if np.random.randint(0, 1):
+                child.chromosomes = np.append(child.chromosomes, np.random.choice(father.chromosomes))
+            else:
+                child.chromosomes = np.append(child.chromosomes, np.random.choice(mother.chromosomes))
+
+        if np.random.randint(0, 100) <= 20:
             child = self.mutate(child)
 
         return child
 
     def createPopulation(self):
-        self.totalPopulation = len(self.allPopulation)
+        self.populationCount = len(self.allPopulation)
+
 
         self.allPopulation = sorted(
             self.allPopulation,
             reverse=True,
             key=lambda specie: specie.fitness
         )
+
+        populationFilter = int(self.populationCount / 2)
+        
+        tmpHistoric = []
+        for n in range(self.populationCount):
+            currentSpecie = self.allPopulation[n]
+            
+            tmpHistoric.append(currentSpecie.__dict__)
+            currentSpecie.age += 1
+        
+        self.historic.append(tmpHistoric)
+
+        newPopulation = np.empty(0)
+        for specie in self.allPopulation[:populationFilter]:
+            if len(specie.chromosomes) == 0:
+                raise NoChromosomes("Chromosomes list is empty in one of the objects")
+            if specie.age <= self.maxSpecieAge:
+                newPopulation = np.append(newPopulation, specie)
+
+        while len(newPopulation) < self.populationCount:
+            father, mother = self.chooseParent(self.allPopulation)
+            newPopulation = np.append(newPopulation, self.crossOver(father, mother))
+
+        self.allPopulation = newPopulation
         
         if self.allPopulation[0].fitness > self.better.fitness:
             self.better = self.allPopulation[0]
 
-        populationFilter = int(len(self.allPopulation) * 0.5) + 1
+        return self.allPopulation
 
-        newPopulation = []
-        for specie in self.allPopulation:
-            if specie.age < self.maxSpecieAge and len(specie.chromosomes) >= self.minimunParts:
-                newPopulation.append(specie)
-
-        newPopulation = sel.gradientRandomSelection(newPopulation, populationFilter)
-
-        if not (self.better in newPopulation) and self.better.age < self.maxSpecieAge:
-            newPopulation.insert(0, self.better)
-
-        for n in range(len(newPopulation)):
-            newPopulation[n].age += 1
-        
-        maxLoop = 0
-        while len(newPopulation) < self.totalPopulation:
-            father, mother = self.chooseParent(self.allPopulation)
-            newPopulation.append(self.crossOver(father, mother))
-
-            maxLoop += 1
-            if maxLoop >= 100:
-                break
-
-        self.allPopulation = newPopulation
-
-        return newPopulation
 
 if __name__ == '__main__':
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    
+    #plt.style.use('ggplot')
+
     geneticModule = Population()
-    partsOptions = ['wheelSlow', 'wheelFast', 'wheelNone']
+    partsOptions = [119., 97., 100., 115.]
     population = []
     
-    for i in range(10):
-        specie = Specie()
-        specie.fitness = i
-        specie.chromosomes = []
-        specie.age = i if i < 10 else 3
-        for _ in range(4):
-            specie.chromosomes.append(random.choice(partsOptions))
-        
-        specie.createName()
-        
-        population.append(specie)
+    numberOfGenomes = 2
 
-    geneticModule.allPopulation = population
-    for i in geneticModule.createPopulation():
-        print(i)
-        # pass
+    for i in range(5):
+        specie = Specie()
+        for _ in range(numberOfGenomes):
+            specie.chromosomes = np.append(np.array(specie.chromosomes), np.random.choice(partsOptions))
+
+        specie.createName(geneticModule.namesOptions)
+
+        population.append(specie)
     
-    print("Better: " + str(geneticModule.better))
+    def run(population, numberOfGenomes):
+        geneticModule.allPopulation = population
+        end = False
+        for _ in range(100):
+            for i in range(len(geneticModule.allPopulation)):
+                actualSpecie = geneticModule.allPopulation[i]
+                actualSpecie.fitness = int(np.count_nonzero(actualSpecie.chromosomes == 119.))
+                if actualSpecie.fitness == numberOfGenomes:
+                    print("Converged", actualSpecie)
+                    end = True
+            
+            geneticModule.createPopulation()
+            if end:
+                return geneticModule
+    
+        return False
+    
+    geneticModule = run(population, numberOfGenomes)
+    
+    if geneticModule:
+        print([pd.DataFrame(epoch) for epoch in geneticModule.historic])
+        
+    else:
+        print("Fail")

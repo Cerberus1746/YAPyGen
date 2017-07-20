@@ -1,10 +1,6 @@
 import numpy as np
+import NeuralNet.utils as utils
 
-def sigmoid_gradient(x):
-    return x * (1 - x)
-
-def sigmoid(x):
-    return 1/ (1 + np.exp(-x))
 
 class Perceptron():
     training_set = []
@@ -13,11 +9,17 @@ class Perceptron():
 
     weights = []
     bias = 0
+    seed = 0
+    
+    numberOfInputs = 0
 
     def __init__(self, numberOfInputs, seed=False):
         if seed:
             np.random.seed(seed)
-
+        
+        self.seed = seed
+        self.numberOfInputs = numberOfInputs
+        
         self.weights = np.random.random(numberOfInputs)
         self.bias = np.random.random()
 
@@ -27,7 +29,7 @@ class Perceptron():
     def train(self, epochs, learning_rate=0.1):
         for _ in range(epochs):
             numberOfData = len(self.training_set)
-            totalError = 0
+
             for n in range(numberOfData):
                 actualTrainingSet = self.training_set[n]
 
@@ -35,47 +37,45 @@ class Perceptron():
 
                 error = self.labels[n] - output
 
-                totalError +=  1/(2*(error**2))
-                
+                fixedError = learning_rate * error
 
-                self.weights += learning_rate * (error * sigmoid_gradient(output)) * actualTrainingSet
-                self.bias += learning_rate * (error * sigmoid_gradient(output))
+                self.weights += fixedError * actualTrainingSet
+                self.bias += fixedError
 
-            self.errors.append(totalError)
+                self.errors.append(error)
 
     def predict(self, inputs):
-        return sigmoid(np.dot(inputs, self.weights) + self.bias)
+        return utils.sigmoid(np.dot(inputs, self.weights) + self.bias)
+    
+    def netPredict(self, inputs):
+        return utils.sigmoid(np.dot(inputs, self.weights))
 
 if __name__ == "__main__":
     import pylab
-    perc = Perceptron(3, seed=1)
+    perc = Perceptron(2, seed=1)
 
-    perc.training_set = np.array([[0, 0, 0],
-                                  [0, 1, 0],
-                                  [1, 0, 0],
-                                  [0, 0, 1],
-                                  [1, 0, 1],
-                                  [0, 1, 1],
-                                  [1, 1, 0],
-                                  [1, 1, 1]])
+    perc.training_set = np.array([[0, 0],
+                                  [0, 1],
+                                  [1, 0],
+                                  [1, 1]])
 
-    perc.labels = np.array([0, 1, 1, 1, 1, 1, 1, 1])
+    perc.labels = np.array([0, 1, 1, 1])
 
-    perc.train(100, 0.1)
+    perc.train(10000, .01)
 
     pylab.ylim([-1, 1])
     pylab.plot(perc.errors)
     pylab.show()
 
-    print("[0, 0, 0] -> ?: ")
-    print(perc.predict(np.array([0, 0, 0])))
+    print("[0, 0] -> ?: ")
+    print(perc.predict(np.array([0, 0])))
 
-    print("[0, 1, 0] -> ?: ")
-    print(perc.predict(np.array([0, 1, 0])))
+    print("[0, 1] -> ?: ")
+    print(perc.predict(np.array([0, 1])))
 
-    print("[1, 0, 0] -> ?: ")
-    print(perc.predict(np.array([1, 0, 0])))
+    print("[1, 0] -> ?: ")
+    print(perc.predict(np.array([1, 0])))
 
     print("[1, 1, 1] -> ?: ")
-    print(perc.predict(np.array([1, 1, 1])))
+    print(perc.predict(np.array([1, 1])))
     print(perc)

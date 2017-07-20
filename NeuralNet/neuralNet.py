@@ -1,6 +1,5 @@
 import numpy as np
 import NeuralNet.perceptron as perc
-import NeuralNet.utils as utils
 
 
 class NeuralNet():
@@ -11,6 +10,9 @@ class NeuralNet():
 
     hiddenLayer = []
     outputLayer = []
+    
+    hiddenLayerOutput = []
+    outputLayerOutput = []
 
     hiddenLayerBias = 0
     outputLayerBias = 0
@@ -32,50 +34,41 @@ class NeuralNet():
                 numberOfHiddenNodes + 1, self.seed)
             self.outputLayer.append(newPerc)
         
-        self.hiddenLayerBias = np.random.random()
-        self.outputLayerBias = np.random.random()
+    def predict(self, values):
+        self.hiddenLayerOutput = []
+        self.outputLayerOutput = []
 
-    def predict(self, rawValues):
-        outputs = []
-        for value in rawValues:
-            hiddenLayerOutput = []
-            outputLayerOutput = []
+        values = np.append(values, 1)
+        for perceptron in self.hiddenLayer:
+            self.hiddenLayerOutput.append(perceptron.netPredict(values))
 
-            value = np.append(value, self.hiddenLayerBias)
-            for perceptron in self.hiddenLayer:
-                hiddenLayerOutput.append(perceptron.predict(value))
+        self.hiddenLayerOutput = np.append(self.hiddenLayerOutput, 1)
+        for perceptron in self.outputLayer:
+            self.outputLayerOutput.append(perceptron.netPredict(self.hiddenLayerOutput))
 
-            hiddenLayerOutput = np.append(hiddenLayerOutput, self.outputLayerBias)
-            for perceptron in self.outputLayer:
-                outputLayerOutput.append(perceptron.predict(hiddenLayerOutput))
-
-            outputs.append(outputLayerOutput)
-
-        return np.array(outputs)
+        return np.array(self.outputLayerOutput)
 
     def train(self, epochs, learning_rate=0.1):
         for _ in range(epochs):
             numberOfData = len(self.training_set)
-            totalError = 0
             for n in range(numberOfData):
-                output = self.predict([self.training_set[n]])
+                currentSet = self.training_set[n]
+                output = self.predict(currentSet)
 
-                error = self.labels[n] - output
-                totalError += error * utils.sigmoid_gradient(output)
+                error = sum((self.labels[n] - output) * learning_rate)
 
-            totalError = sum(totalError)
-            self.errors.append(totalError)
-            
-            adjustment = totalError * learning_rate
-
-            for n in range(len(self.hiddenLayer)):
-                self.hiddenLayer[n].weights += adjustment
-
-            for n in range(len(self.outputLayer)):
-                self.outputLayer[n].weights += adjustment
-            
-            self.hiddenLayerBias += adjustment
-            self.outputLayerBias += adjustment
+                self.errors.append(error)
+                
+                print(self.hiddenLayerOutput)
+    
+                for n in range(len(self.hiddenLayer)):
+                    self.hiddenLayer[n].weights += error
+    
+                for n in range(len(self.outputLayer)):
+                    self.outputLayer[n].weights += error
+                
+                self.hiddenLayerBias += error
+                self.outputLayerBias += error
 
 
 if __name__ == "__main__":
@@ -87,8 +80,6 @@ if __name__ == "__main__":
 
     training_set = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     labels = np.array([0, 1, 1, 1])
-
-    predictValues = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
     net = NeuralNet(numberOfInputs, numberOfHiddenNodes,
                     numberOfOutputLayers, 1)
@@ -102,4 +93,7 @@ if __name__ == "__main__":
     pylab.plot(net.errors)
     pylab.show()
 
-    print(net.predict(predictValues))
+    print(net.predict([0, 0]))
+    print(net.predict([0, 1]))
+    print(net.predict([1, 0]))
+    print(net.predict([0, 1]))
