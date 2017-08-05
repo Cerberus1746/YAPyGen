@@ -1,37 +1,21 @@
-import numpy as np
+from genetic import error_handling, utils
 
-def scale_linear_bycolumn(rawpoints, high=100.0, low=0.0):
-    mins = np.min(rawpoints, axis=0)
-    maxs = np.max(rawpoints, axis=0)
-    rng = maxs - mins
-    return high - (((high - low) * (maxs - rawpoints)) / rng)
+def tournament(population, numberOfSpecies = 1):
+    popLen = len(population)
+    winners = []
 
+    if popLen == 0:
+        raise error_handling.NoPopulation("Population list can't be empty")
 
-def tournament(population, numberOfSpecies):
-    winners = np.empty(0)
+    if popLen < numberOfSpecies:
+        raise error_handling.NoPopulation("numberOfSpecies value is over the number of avaiable species")
 
-    while len(winners) < numberOfSpecies:
-        randomPop = np.random.choice(population, 2)
+    for _ in range(numberOfSpecies):
+        randomPop = utils.globalChoice(population, 2)
+        if randomPop[0].fitness > randomPop[1].fitness:
+            winners.append(randomPop[0])
 
-        fitnessList = sorted([specie.fitness for specie in randomPop], reverse=True)
-
-        for specie in randomPop:
-            if specie.fitness == fitnessList[0]:
-                winners = np.append(winners, specie)
-
-    winners = sorted(
-        winners,
-        reverse=True,
-        key=lambda specie: specie.fitness
-    )
+        else:
+            winners.append(randomPop[1])
 
     return winners
-
-def rouletteChoice(population):
-    maxFitness = sum([specie.fitness for specie in population])
-    pick = np.random.uniform(0, maxFitness)
-    current = 0
-    for specie in population:
-        current += specie.fitness
-        if current > pick:
-            return specie

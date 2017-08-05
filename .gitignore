@@ -1,3 +1,5 @@
 *.blend*
 .project
 .pydevproject
+/Genetic Population Test.ipynb
+/test_unit.py

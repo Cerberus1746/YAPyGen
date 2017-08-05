@@ -1,16 +1,19 @@
+import bge
+
 import add_objects
 import chasis
 from genetic.population import Population
-import bge
+import numpy as np
 
 
 class Main():
-	timePerSimulation = 3
-	simulationsToMake = 6
+	timePerSimulation = 6
+	simulationsToMake = 20
 	maxCycle = 50
-	timeScale = 2
+	timeScale = 4
 	startingPoint = [0, 0, 0.5]
 	resetSimulations = False
+	maxSpecieAge = 5
 
 	actualCycle = 0
 	simulationCycle = 0
@@ -18,7 +21,7 @@ class Main():
 	def __init__(self):
 		bge.logic.setTimeScale(self.timeScale)
 		self.population = Population()
-		self.population.maxSpecieAge = 3
+		self.population.maxSpecieAge = self.maxSpecieAge
 
 	def refreshScene(self):
 		self.scene = bge.logic.getCurrentScene()
@@ -27,19 +30,25 @@ class Main():
 		self.adder = add_objects.Add(self.sceneObjects["Floor.001"])
 		self.target = self.scene.objects['Target']
 
-		chassisAdded = self.adder.inPosAndRot("Master.Learner", self.startingPoint,   [0, 0, 0])
-
+		
 		if self.simulationCycle == 0 or len(self.population.allPopulation) < self.simulationsToMake:
-			newVehicle = chasis.Chasis(chassisAdded)
-			newVehicle.preBuild()
+			chassisAdded = self.adder.inPosAndRot("Master.Learner", self.startingPoint, [0, 0, 0])
+			self.currentVehicle = chasis.Chasis(chassisAdded)
+			self.currentVehicle.maximunSimulationTime = self.timePerSimulation
+			self.currentVehicle.preBuild()
 		else:
-			newVehicle = chasis.Chasis(chassisAdded, self.population.allPopulation[self.actualCycle])
+			geneticObject = self.population.allPopulation[self.actualCycle]
+			if geneticObject.fitness == np.NINF:
+				chassisAdded = self.adder.inPosAndRot("Master.Learner", self.startingPoint, [0, 0, 0])
+				self.currentVehicle = chasis.Chasis(chassisAdded, geneticObject)
+			else:
+				self.actualCycle += 1
+				return self.refreshScene()
 
-		newVehicle.startingCoordinate = self.startingPoint
-		newVehicle.maximunSimulationTime = self.timePerSimulation
-		newVehicle.build()
+		self.currentVehiclestartingCoordinate = self.startingPoint
+		self.currentVehicle.maximunSimulationTime = self.timePerSimulation
+		self.currentVehicle.build()
 
-		self.currentVehicle = newVehicle
 		self.currentVehicle.target = self.target
 		self.currentVehicle.init = True
 		
@@ -51,7 +60,8 @@ class Main():
 			bge.logic.globalDict['refresh'] = True
 
 			if self.simulationCycle == 0 or len(self.population.allPopulation) < self.simulationsToMake:
-				self.population.allPopulation.append(
+				
+				self.population.allPopulation = np.append(self.population.allPopulation,
 					self.currentVehicle.geneticObject)
 
 			self.actualCycle += 1
@@ -80,12 +90,12 @@ class Main():
 
 		[print(x) for x in self.population.allPopulation]
 
-		print("Better: " + str(self.population.better))
+		print("Better: " + str(self.population.best))
 
 		self.simulationsToMake = len(self.population.allPopulation)
 
-		#if self.population.better.age >= self.population.maxSpecieAge and self.population.better.conditionsMet:
-		if self.population.better.age >= self.population.maxSpecieAge:
+		if self.population.best.age >= self.population.maxSpecieAge and self.population.best.conditionsMet:
+		#if self.population.best.age >= self.population.maxSpecieAge:
 			self.scene.end()
 
 		self.simulationCycle += 1
@@ -93,7 +103,7 @@ class Main():
 		if self.simulationCycle < self.maxCycle:
 			self.scene.restart()
 		else:
-			self.simulationCycle = 0
+			self.population.createDataFrame("fitness").to_csv("data.csv")
 			self.scene.end()
 try:
 	if (bge.logic.globalDict.get("refresh", False) and
