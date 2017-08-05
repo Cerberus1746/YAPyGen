@@ -1,6 +1,8 @@
 FITNESS_GENE_BASED = "fitnessGeneBased"
 FITNESS_SET = "fitnessSet"
 
+MUTATION_RECESSIVES = "mutationRecessives"
+
 FILTER_CUT_HALF = "filterCutHalf"
 
 ALL = "all"

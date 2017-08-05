@@ -1,10 +1,12 @@
+from numpy import random
+
 import genetic
+from genetic.cross_over import randomShuffle
+from genetic.filters import simpleSplit
 from genetic.genes import GeneGroup
 from genetic.population import Population
-from genetic.filters import simpleSplit
 from genetic.selectors import tournament
-from genetic.cross_over import randomShuffle
-from numpy import random
+
 
 if __name__ == "__main__":    
     random.seed(0)
