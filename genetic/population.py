@@ -7,7 +7,7 @@ import genetic
 from genetic.genes import Specie
 
 
-class Population(genes.Dna):
+class Population(genes.GeneGroup):
     def __init__(
                 self,
                 *values,
@@ -26,13 +26,13 @@ class Population(genes.Dna):
 
         self.best = genes.Specie()
 
-        genes.Dna.__init__(self, *values, name, maxGenes, maxGroups)
+        genes.GeneGroup.__init__(self, *values, name, maxGenes, maxGroups)
 
     def __getitem__(self, name):
         if type(name) == int:
             return self._allPopulation[name]
         elif type(name) == str:
-            return genes.Dna.__getitem__(self, name)
+            return genes.GeneGroup.__getitem__(self, name)
         else:
             raise AttributeError("Use int to get specie from population or string to get avaiable GeneGroup")
 
@@ -40,7 +40,7 @@ class Population(genes.Dna):
         if type(name) == int:
             self._allPopulation[name] = value
         elif type(name) == str:
-            genes.Dna.__setitem__(self, name, value)
+            genes.GeneGroup.__setitem__(self, name, value)
         else:
             raise AttributeError("Use int to define specie from population or string to define value of GeneGroup")
 
@@ -64,7 +64,7 @@ class Population(genes.Dna):
         if type(other) == Specie:
             self._allPopulation.append(other)
             return self
-        return genes.Dna.__add__(self, other)
+        return genes.GeneGroup.__add__(self, other)
 
     def calcFitness(self, calculationType, handler = ""):
         for index in range(len(self)):

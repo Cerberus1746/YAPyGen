@@ -2,13 +2,13 @@ from genetic import genes, error_handling, utils, FITNESS_GENE_BASED
 import copy
 from numpy import random, NINF
 
-class Dna:
+class GeneGroup:
     def __init__(self, *addGenes, name = "", mutable = False, maxGenes = False, maxGroups = False):
         self.name = name
         self.mutable = mutable
         self.maxGenes = maxGenes
         self.maxGroups = maxGroups
-        
+
         self.genes = []
         self.groups = {}
 
@@ -34,7 +34,7 @@ class Dna:
             raise StopIteration
 
         return self.values[self._index]
-    
+
     def __len__(self):
         return len(self.genes)
 
@@ -73,7 +73,7 @@ class Dna:
 
     def copy(self):
         return copy.copy(self)
-    
+
     def deepcopy(self):
         return copy.deepcopy(self)
 
@@ -82,7 +82,7 @@ class Dna:
             return self.groups[name]
 
         return defaultReturn
-    
+
     def shuffleGenes(self):
         random.shuffle(self.genes)
 
@@ -93,7 +93,7 @@ class Dna:
                 self.addGene(gene)
         else:
             raise error_handling.Genes("Gene List can't be empty")
-    
+
     def setAllGroups(self, groups, setLimits = False):
         if len(groups) > 0:
             self.groups = {}
@@ -122,7 +122,6 @@ class Dna:
 
             totalGroups = utils.globalChoice(possibleGroups, numberOfGroups, True)
             self.setAllGroups(totalGroups, True)
-        
 
     def addMultipleGenes(self, geneList):
         if len(geneList) == 0:
@@ -130,7 +129,7 @@ class Dna:
 
         for gene in geneList:
             self.addGene(gene)
-    
+
     def addMultipleGroups(self, groupList, setLimits=False):
         if len(groupList) == 0:
             raise AttributeError("Group list can't be empty")
@@ -201,16 +200,10 @@ class Gene:
             return hash(self.value)
 
     def __repr__(self):
-        return "Gene(%s)" % str(self.value)
+        return "\n\tGene(%s)" % str(self.value)
 
-class GeneGroup(Dna):
-    def __init__(self, *values, name = "", mutable = False, maxGenes = False, maxGroups = False):
-        Dna.__init__(self, *values, name = name, mutable = mutable, maxGenes = maxGenes, maxGroups = maxGroups)
 
-    def __repr__(self):
-        return "Group: %s(%s)" % (self.name, self.genes)
-
-class Specie(Dna):
+class Specie(GeneGroup):
     def __init__(self, *values, name = "", maxGenes = False, maxGroups = False):
         self.fitness = NINF
         self.age = 0
@@ -219,10 +212,10 @@ class Specie(Dna):
         self.conditionsMet = False
         self.parents = ()
         
-        genes.Dna.__init__(self, *values, name = name, maxGenes = maxGenes, maxGroups = maxGroups)
+        GeneGroup.__init__(self, *values, name = name, maxGenes = maxGenes, maxGroups = maxGroups)
 
     def __repr__(self):
-        return "<Specie: %s\n\tGenes(%s)\n\tGroups(%s)\n\tFitness: %s>\n" % (self.name, self.genes, list(self.groups.values()), self.fitness)
+        return "\n<Specie: %s Genes(%s) Groups(%s)\n\tFitness: %s>" % (self.name, self.genes, list(self.groups.values()), self.fitness)
 
     def initChild(self, parents):
         self.fitness = NINF

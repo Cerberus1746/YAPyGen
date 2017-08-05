@@ -40,5 +40,3 @@ for result in pred:
     tmpResult[np.argmax(result)] = 1
     print(tmpResult)
 
-model.save('car_steering.tflearn')
-
