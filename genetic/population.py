@@ -15,8 +15,7 @@ class Population(genes.GeneGroup):
                 specieObject = genes.Specie,
                 name = "",
                 maxGenes = False,
-                maxGroups = False
-            ):
+                maxGroups = False):
         self._allPopulation = []
 
         self.specieObject = specieObject
@@ -34,7 +33,7 @@ class Population(genes.GeneGroup):
         elif type(name) == str:
             return genes.GeneGroup.__getitem__(self, name)
         else:
-            raise AttributeError("Use int to get specie from population or string to get avaiable GeneGroup")
+            raise AttributeError("Use int to getGroup specie from population or string to getGroup avaiable GeneGroup")
 
     def __setitem__(self, name, value):
         if type(name) == int:
@@ -59,7 +58,7 @@ class Population(genes.GeneGroup):
 
     def __len__(self):
         return len(self._allPopulation)
-    
+
     def __add__(self, other):
         if type(other) == Specie:
             self._allPopulation.append(other)
@@ -70,19 +69,27 @@ class Population(genes.GeneGroup):
         for index in range(len(self)):
             self[index].calcFitness(calculationType, handler)
 
-    def filterPopulation(self, filterType):
-        for species in self:
-            if species.fitness == NINF:
-                raise error_handling.NoFitnessValue("%s have no fitness value." % species)
+    def filterPopulation(self, filterType, **kargs):
+        for sIndex, specie in enumerate(self):
+            if specie.fitness == NINF:
+                raise error_handling.NoFitnessValue("%s have no fitness value." % specie)
+
+            self[sIndex].age += 1
+            if kargs.get("maxAge", False):
+                if specie.age > kargs["maxAge"]:
+                    del(self[sIndex])
+
+
+        if "numberOfSpecies" not in kargs:
+            kargs["numberOfSpecies"] = int(len(self) / 2)
 
         oldPopulation = copy.deepcopy(self)
-
         self._allPopulation = sorted(self._allPopulation, reverse = True, key = lambda specie: specie.fitness)
-        
+
         if self[0].fitness > self.best.fitness:
             self.best = self[0]
 
-        self._allPopulation = filterType(self._allPopulation)
+        self._allPopulation = filterType(self._allPopulation, **kargs)
         return (oldPopulation, self)
 
     def selectParents(self, selectionType):

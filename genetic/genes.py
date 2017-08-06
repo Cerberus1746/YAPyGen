@@ -1,11 +1,18 @@
-from genetic import genes, error_handling, utils, FITNESS_GENE_BASED
 import copy
+
 from numpy import random, NINF
 
+from genetic import genes, error_handling, utils, FITNESS_GENE_BASED
+
+
 class GeneGroup:
-    def __init__(self, *addGenes, name = "", mutable = False, maxGenes = False, maxGroups = False):
+    def __init__(self, *addGenes, name = "", maxGenes = False, maxGroups = False):
+        '''
+        :param name: Name of the Group
+        :param maxGenes: Maximun genes inside Group
+        :param maxGroups: Mzximun groups inside Group
+        '''
         self.name = name
-        self.mutable = mutable
         self.maxGenes = maxGenes
         self.maxGroups = maxGroups
 
@@ -33,7 +40,7 @@ class GeneGroup:
             self._index = -1
             raise StopIteration
 
-        return self.values[self._index]
+        return self.genes[self._index]
 
     def __len__(self):
         return len(self.genes)
@@ -71,13 +78,31 @@ class GeneGroup:
 
         return selfCopy
 
+    def __repr__(self):
+        return "GeneGroup: {} Genes({:_<10}) Groups({})".format(
+            self.name,
+            str(self.genes),
+            list(self.groups.values()) if len(self.groups) > 0 else "No Groups"
+        )
+
     def copy(self):
+        '''
+        Copy the object.
+        '''
         return copy.copy(self)
 
     def deepcopy(self):
+        '''
+        Copy group recursively.
+        '''
         return copy.deepcopy(self)
 
-    def get(self, name, defaultReturn = False):
+    def getGroup(self, name, defaultReturn = False):
+        '''
+        
+        :param name:
+        :param defaultReturn:
+        '''
         if name in self.groups:
             return self.groups[name]
 
@@ -130,7 +155,7 @@ class GeneGroup:
         for gene in geneList:
             self.addGene(gene)
 
-    def addMultipleGroups(self, groupList, setLimits=False):
+    def addMultipleGroups(self, groupList, setLimits = False):
         if len(groupList) == 0:
             raise AttributeError("Group list can't be empty")
         for group in groupList:
@@ -150,22 +175,22 @@ class GeneGroup:
 
         return self
 
-    def addGroup(self, newGroup, setLimits=False):
+    def addGroup(self, newGroup, setLimits = False):
         if type(newGroup) != GeneGroup:
             raise AttributeError("Invalid type")
-        
-        if not self.get(newGroup.name, False):
+
+        if not self.getGroup(newGroup.name, False):
             newGroup = newGroup.deepcopy()
             self.recessiveGroups.add(newGroup)
             self[newGroup.name] = newGroup
 
         else:
             self[newGroup.name] += newGroup
-        
+
         if setLimits:
             if newGroup.maxGenes > 0 and len(newGroup.genes) > newGroup.maxGenes:
                 newGroup.generateRandomGeneSequence(possibleGenes = newGroup.genes, numberOfGenes = newGroup.maxGenes)
-    
+
             if newGroup.maxGroups > 0 and len(newGroup.groups) > newGroup.maxGroups:
                 newGroup.generateRandomGeneSequence(possibleGroups = newGroup.groups, numberOfGroups = newGroup.maxGroups)
 
@@ -175,7 +200,7 @@ class Gene:
     def __init__(self, value, mutable = False):
         self.recessive = False
         self.groups = []
-        
+
         self.mutable = mutable
         self.value = value
 
@@ -211,11 +236,12 @@ class Specie(GeneGroup):
         self.child = False
         self.conditionsMet = False
         self.parents = ()
-        
+        self.isMutation = False
+
         GeneGroup.__init__(self, *values, name = name, maxGenes = maxGenes, maxGroups = maxGroups)
 
     def __repr__(self):
-        return "\n<Specie: %s Genes(%s) Groups(%s)\n\tFitness: %s>" % (self.name, self.genes, list(self.groups.values()), self.fitness)
+        return "\n<Specie: {} Genes({}) \nGroups({})\n\tFitness: {}>".format(self.name, self.genes, list(self.groups.values()), self.fitness)
 
     def initChild(self, parents):
         self.fitness = NINF
@@ -223,8 +249,14 @@ class Specie(GeneGroup):
         self.primordial = False
         self.child = True
         self.conditionsMet = False
+        self.isMutation = False
         self.parents = parents
 
+    def mutate(self, mutationChance, mutationType):
+        if random.randint(0, 100) < mutationChance:
+            self.isMutation = True
+            newGenes = mutationType(self)
+            self.setAllGenes(newGenes)
 
     def calcFitness(self, calculationType, handler = None):
         if calculationType == FITNESS_GENE_BASED:

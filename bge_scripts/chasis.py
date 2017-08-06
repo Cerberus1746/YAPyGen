@@ -58,7 +58,7 @@ class Chasis(bge.types.KX_GameObject):
         return str(self.__dict__)
 
     def preBuild(self):
-        self.geneticObject.chromosomes = np.empty((0,2))
+        self.geneticObject.chromosomes = np.empty((0, 2))
 
         self.geneticObject.primordial = True
         self.geneticObject.age = 0

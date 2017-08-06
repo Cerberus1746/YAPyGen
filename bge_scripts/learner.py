@@ -10,9 +10,9 @@ try:
 	chasisObj = chasis.bge.logic.getCurrentController().owner
 	if chasisObj.get('init', False):
 		keyboard = chasisObj.sensors['Keyboard']
-		
+
 		newEvents = [x[0] for x in keyboard.events]
-		
+
 		for wheel in chasisObj.wheels:
 			if W in newEvents:
 				wheel.applyTorque([0, 0, -10], True)
@@ -20,12 +20,12 @@ try:
 				wheel.applyTorque([0, 0, 10], True)
 			elif A in newEvents:
 				if wheel["right"]:
-					wheel.applyTorque([0, 0, -10],True)
+					wheel.applyTorque([0, 0, -10], True)
 				elif wheel["left"]:
 					wheel.applyTorque([0, 0, 10], True)
 			elif D in newEvents:
 				if wheel["right"]:
-					wheel.applyTorque([0, 0, 10],True)
+					wheel.applyTorque([0, 0, 10], True)
 				elif wheel["left"]:
 					wheel.applyTorque([0, 0, -10], True)
 
@@ -36,7 +36,7 @@ try:
 		chasisObj = chasis.Chasis(chasisObj)
 		chasisObj.preBuild()
 		chasisObj.build()
-		
+
 		chasisObj.lastEvents = []
 		chasisObj["init"] = True
 except:

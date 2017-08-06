@@ -1,7 +1,9 @@
-from genetic import error_handling
+import copy
 
 from numpy import random
-import copy
+
+from genetic import error_handling
+
 
 def globalChoice(a, numberOfItemsToGet = 1, allowRepeats = False):
     tmpValues = []
@@ -36,7 +38,7 @@ def joinDictLists(*dictList):
     newDict = {}
     for actualDict in dictList:
         for keyName, itemValue in actualDict.items():
-            if not newDict.get(keyName, False):
+            if not newDict.getGroup(keyName, False):
                 newDict[keyName] = copy.copy(itemValue)
             else:
                 if type(itemValue) == list:

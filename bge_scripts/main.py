@@ -30,7 +30,7 @@ class Main():
 		self.adder = add_objects.Add(self.sceneObjects["Floor.001"])
 		self.target = self.scene.objects['Target']
 
-		
+
 		if self.simulationCycle == 0 or len(self.population.allPopulation) < self.simulationsToMake:
 			chassisAdded = self.adder.inPosAndRot("Master.Learner", self.startingPoint, [0, 0, 0])
 			self.currentVehicle = chasis.Chasis(chassisAdded)
@@ -51,7 +51,7 @@ class Main():
 
 		self.currentVehicle.target = self.target
 		self.currentVehicle.init = True
-		
+
 
 	def perTick(self):
 		self.cam["time"] = int(self.currentVehicle["time"])
@@ -60,7 +60,7 @@ class Main():
 			bge.logic.globalDict['refresh'] = True
 
 			if self.simulationCycle == 0 or len(self.population.allPopulation) < self.simulationsToMake:
-				
+
 				self.population.allPopulation = np.append(self.population.allPopulation,
 					self.currentVehicle.geneticObject)
 
@@ -95,7 +95,7 @@ class Main():
 		self.simulationsToMake = len(self.population.allPopulation)
 
 		if self.population.best.age >= self.population.maxSpecieAge and self.population.best.conditionsMet:
-		#if self.population.best.age >= self.population.maxSpecieAge:
+		# if self.population.best.age >= self.population.maxSpecieAge:
 			self.scene.end()
 
 		self.simulationCycle += 1
