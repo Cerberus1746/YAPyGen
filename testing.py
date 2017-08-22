@@ -1,11 +1,9 @@
-from numpy import random
-
 import genetic
-from genetic.cross_over import randomShuffle
-from genetic.genes import GeneGroup
+from genetic.genes import GeneGroup, Specie
 from genetic.mutation import recessive
 from genetic.population import Population
-from genetic.selectors import tournament, roulette, simpleSplit
+from genetic.selectors import simpleSplit
+from genetic.cross_over import randomShuffle
 
 
 PURPLE = '\033[95m'
@@ -19,8 +17,6 @@ BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 END = '\033[0m'
 
-random.seed(0)
-
 W = 119
 A = 97
 S = 115
@@ -31,28 +27,48 @@ NUMBER_OF_SPECIES = 10
 GENES_PER_SPECIE = 10
 GROUPS_PER_SPECIE = 0
 
+W = 119
+A = 97
+S = 115
+D = 100
+
+TRAINING_EPOCHS = 1
+NUMBER_OF_SPECIES = 5
+GENES_PER_SPECIE = 0
+GROUPS_PER_SPECIE = 4
+
 POSSIBLE_GROUPS = [
-    GeneGroup(10, 4, 5)
+    GeneGroup(
+        [W, W],
+        [A, A],
+        [S, S],
+        [D, D],
+
+        [W, D],
+        [W, A],
+        [S, D],
+        [S, A],
+        name="Actions",
+        maxGenes=3
+    ),
+    GeneGroup(
+        "Front",
+        "Back",
+        "Right",
+        "Left",
+        name="Sensors",
+        maxGenes=3
+    )
 ]
 
-POSSIBLE_GENES = [
-    [W, W],
-    [A, A],
-    [S, S],
-    [D, D],
+POSSIBLE_GENES = []
 
-    [W, D],
-    [W, A],
-    [S, D],
-    [S, A]
-]
+defaultSpecies = Specie(POSSIBLE_GROUPS[0], POSSIBLE_GROUPS[1], maxGroups=2)
 
 def runCode():
     newPopulation = Population()
 
-    newPopulation.setAllGenes(POSSIBLE_GENES)
-    newPopulation.setAllGroups(POSSIBLE_GROUPS)
-    newPopulation.generatePopulation(NUMBER_OF_SPECIES, GENES_PER_SPECIE, GROUPS_PER_SPECIE)
+    newPopulation.generatePopulationFromSpecie(defaultSpecies, 10)
 
     print(BOLD + GREEN + "Initial Population" + END + END)
     print(newPopulation)
@@ -61,20 +77,24 @@ def runCode():
         print((BOLD + GREEN + "\nEpoch: {}" + END + END).format(epoch))
 
         newPopulation.calcFitness(genetic.FITNESS_GENE_BASED, [S, S])
-        oldPopulation, newPopulation = newPopulation.filterPopulation(simpleSplit)
+        oldPopulation, newPopulation = newPopulation.filterPopulation(
+            simpleSplit)
         toCreate = len(oldPopulation) - len(newPopulation)
         for _ in range(toCreate):
-            print(oldPopulation.selectParents(simpleSplit))
             father, mother = oldPopulation.selectParents(simpleSplit)
             child = newPopulation.crossOver(father, mother, randomShuffle)
-            child.mutate(25, recessive)
+            #child.mutate(25, recessive)
+            child.epoch = epoch
 
             newPopulation += child
 
         print("New Population: ", newPopulation)
-        print((BOLD + BLUE + "Best: {}" + END + END).format(newPopulation.best))
+        print(
+            (BOLD + BLUE + "Best: {}" + END + END).format(newPopulation.best)
+        )
 
         if newPopulation.best.fitness == GENES_PER_SPECIE:
-            return
+            return newPopulation.best
+
 
 runCode()

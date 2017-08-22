@@ -1,4 +1,6 @@
-import bge, bpy, mathutils
+import bge
+import bpy
+import mathutils
 
 import add_objects
 from genetic.specie import Specie
@@ -9,6 +11,7 @@ W = 119
 A = 97
 S = 115
 D = 100
+
 
 class Chasis(bge.types.KX_GameObject):
     startingCoordinate = [0, 0, 0]
@@ -41,13 +44,14 @@ class Chasis(bge.types.KX_GameObject):
     currentTime = 0
     currentInstruction = 0
 
-    namesOptions = ["buffalo", "dog", "cat", "merkat", "dolphin", "croc", "alpaca", "raven"]
+    namesOptions = ["buffalo", "dog", "cat", "merkat",
+                    "dolphin", "croc", "alpaca", "raven"]
 
-
-    def __init__(self, _, useOldObject = False):
+    def __init__(self, _, useOldObject=False):
         self.Add = add_objects.Add(self)
         self.collisionCallbacks.append(self.on_collision_one)
-        self.piecesOptions = [ob.name for ob in bpy.context.scene.objects if ob.layers[1]]
+        self.piecesOptions = [
+            ob.name for ob in bpy.context.scene.objects if ob.layers[1]]
 
         if useOldObject:
             self.geneticObject = useOldObject
@@ -73,7 +77,8 @@ class Chasis(bge.types.KX_GameObject):
             slot = self.children[n]
             part = self.parts[n]
             if part:
-                lastPiece = self.Add.inPosAndRot(part, slot.worldPosition, [0, 90, 0])
+                lastPiece = self.Add.inPosAndRot(
+                    part, slot.worldPosition, [0, 90, 0])
                 lastPiece["steering"] = slot.get("steering", False)
                 lastPiece["torque"] = slot.get("torque", False)
                 lastPiece["right"] = slot.get("right", False)
@@ -86,10 +91,10 @@ class Chasis(bge.types.KX_GameObject):
                     lastPiecePhysics,
                     self.getPhysicsId(),
                     bge.constraints.GENERIC_6DOF_CONSTRAINT,
-                    flag = 128
+                    flag=128
                 )
-                DOF.setParam(3, 0.0, 0.0) # Lock rotation in X axis
-                DOF.setParam(4, 0.0, 0.0) # Lock rotation in Y axis
+                DOF.setParam(3, 0.0, 0.0)  # Lock rotation in X axis
+                DOF.setParam(4, 0.0, 0.0)  # Lock rotation in Y axis
                 # To lock axis Z if necessary: DOF.setParam(4, 0.0, 0.0)
 
                 self.wheels = np.append(self.wheels, lastPiece)
@@ -108,9 +113,11 @@ class Chasis(bge.types.KX_GameObject):
                 self.actualAction += 1
 
                 if self.geneticObject.primordial:
-                    self.currentInstruction = np.random.randint(len(self.commandsOptions) - 1)
+                    self.currentInstruction = np.random.randint(
+                        len(self.commandsOptions) - 1)
                     self.currentInstruction = self.commandsOptions[self.currentInstruction]
-                    self.geneticObject.chromosomes = np.vstack((self.geneticObject.chromosomes, self.currentInstruction))
+                    self.geneticObject.chromosomes = np.vstack(
+                        (self.geneticObject.chromosomes, self.currentInstruction))
                 else:
                     self.currentInstruction = self.geneticObject.chromosomes[self.currentTime]
 
@@ -138,5 +145,6 @@ class Chasis(bge.types.KX_GameObject):
 
         self.geneticObject.fitness = max([
             self.geneticObject.fitness,
-            self.multiplier * (self.worldPosition - mathutils.Vector(self.startingCoordinate)).length
+            self.multiplier * (self.worldPosition -
+                               mathutils.Vector(self.startingCoordinate)).length
         ])

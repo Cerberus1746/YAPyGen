@@ -9,13 +9,13 @@ from genetic.genes import Specie
 
 class Population(genes.GeneGroup):
     def __init__(
-                self,
-                *values,
-                defaultSpeciesCount = False,
-                specieObject = genes.Specie,
-                name = "",
-                maxGenes = False,
-                maxGroups = False):
+            self,
+            *values,
+            defaultSpeciesCount=False,
+            specieObject=genes.Specie,
+            name="",
+            maxGenes=False,
+            maxGroups=False):
         self._allPopulation = []
 
         self.specieObject = specieObject
@@ -33,7 +33,8 @@ class Population(genes.GeneGroup):
         elif type(name) == str:
             return genes.GeneGroup.__getitem__(self, name)
         else:
-            raise AttributeError("Use int to getGroup specie from population or string to getGroup avaiable GeneGroup")
+            raise AttributeError(
+                "Use int to getGroup specie from population or string to getGroup avaiable GeneGroup")
 
     def __setitem__(self, name, value):
         if type(name) == int:
@@ -41,7 +42,8 @@ class Population(genes.GeneGroup):
         elif type(name) == str:
             genes.GeneGroup.__setitem__(self, name, value)
         else:
-            raise AttributeError("Use int to define specie from population or string to define value of GeneGroup")
+            raise AttributeError(
+                "Use int to define specie from population or string to define value of GeneGroup")
 
     def __iter__(self):
         return self
@@ -65,26 +67,27 @@ class Population(genes.GeneGroup):
             return self
         return genes.GeneGroup.__add__(self, other)
 
-    def calcFitness(self, calculationType, handler = ""):
+    def calcFitness(self, calculationType, handler=""):
         for index in range(len(self)):
             self[index].calcFitness(calculationType, handler)
 
     def filterPopulation(self, filterType, **kargs):
         for sIndex, specie in enumerate(self):
             if specie.fitness == NINF:
-                raise error_handling.NoFitnessValue("%s have no fitness value." % specie)
+                raise error_handling.NoFitnessValue(
+                    "%s have no fitness value." % specie)
 
             self[sIndex].age += 1
             if kargs.get("maxAge", False):
                 if specie.age > kargs["maxAge"]:
                     del(self[sIndex])
 
-
         if "numberOfSpecies" not in kargs:
             kargs["numberOfSpecies"] = int(len(self) / 2)
 
         oldPopulation = copy.deepcopy(self)
-        self._allPopulation = sorted(self._allPopulation, reverse = True, key = lambda specie: specie.fitness)
+        self._allPopulation = sorted(
+            self._allPopulation, reverse=True, key=lambda specie: specie.fitness)
 
         if self[0].fitness > self.best.fitness:
             self.best = self[0]
@@ -93,9 +96,9 @@ class Population(genes.GeneGroup):
         return (oldPopulation, self)
 
     def selectParents(self, selectionType):
-        return selectionType(self._allPopulation, numberOfSpecies = 2)
+        return selectionType(self._allPopulation, numberOfSpecies=2)
 
-    def generatePopulation(self, numberOfSpecies, genesPerSpecie, groupsPerSpecie, reset = True):
+    def generatePopulation(self, numberOfSpecies, genesPerSpecie, groupsPerSpecie, reset=True):
         if reset:
             self._allPopulation = []
         for newSpecie in range(numberOfSpecies):
@@ -105,24 +108,34 @@ class Population(genes.GeneGroup):
             newSpecie.maxGroups = groupsPerSpecie
 
             newSpecie.generateRandomGeneSequence(
-                possibleGroups = list(self.groups.values()),
-                possibleGenes = self.genes,
-                numberOfGenes = genesPerSpecie,
-                numberOfGroups = groupsPerSpecie
+                possibleGroups=list(self.groups.values()),
+                possibleGenes=self.genes,
+                numberOfGenes=genesPerSpecie,
+                numberOfGroups=groupsPerSpecie
             )
 
             self._allPopulation.append(newSpecie)
+    
+    def generatePopulationFromSpecie(self, baseSpecie, numberOfSpecie):
+        tmpPopulation = []
+        for _ in range(numberOfSpecie):
+            tmpNewSpecie = baseSpecie.deepcopy()
+            tmpNewSpecie.randomizeGenes(keepGroups=True, recursiveRandom=True)
+            tmpPopulation.append(tmpNewSpecie)
+        
+        self._allPopulation = tmpPopulation
+    
 
-    def crossOver(self, father, mother, crossOverType, speciesNamesOptions = "default"):
-            child = crossOverType(father, mother)
+    def crossOver(self, father, mother, crossOverType, speciesNamesOptions="default"):
+        child = crossOverType(father, mother)
 
-            child.initChild((father, mother))
+        child.initChild((father, mother))
 
-            if father.name != mother.name:
-                if speciesNamesOptions == "default":
-                    child.createName(genetic.SPECIES_OPTIONS)
-                else:
-                    child.createName(speciesNamesOptions)
+        if father.name != mother.name:
+            if speciesNamesOptions == "default":
+                child.createName(genetic.SPECIES_OPTIONS)
             else:
-                child.name = father.name
-            return child
+                child.createName(speciesNamesOptions)
+        else:
+            child.name = father.name
+        return child
