@@ -1,5 +1,5 @@
 import genetic
-from genetic.genes import GeneGroup, Specie
+from genetic.genes import GeneGroup, Specie, Gene
 from genetic.mutation import recessive
 from genetic.population import Population
 from genetic.selectors import simpleSplit
@@ -17,22 +17,13 @@ BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 END = '\033[0m'
 
-W = 119
-A = 97
-S = 115
-D = 100
-
-TRAINING_EPOCHS = 100000
-NUMBER_OF_SPECIES = 10
-GENES_PER_SPECIE = 10
-GROUPS_PER_SPECIE = 0
 
 W = 119
 A = 97
 S = 115
 D = 100
 
-TRAINING_EPOCHS = 1
+TRAINING_EPOCHS = 100
 NUMBER_OF_SPECIES = 5
 GENES_PER_SPECIE = 0
 GROUPS_PER_SPECIE = 4
@@ -76,14 +67,13 @@ def runCode():
     for epoch in range(TRAINING_EPOCHS):
         print((BOLD + GREEN + "\nEpoch: {}" + END + END).format(epoch))
 
-        newPopulation.calcFitness(genetic.FITNESS_GENE_BASED, [S, S])
-        oldPopulation, newPopulation = newPopulation.filterPopulation(
-            simpleSplit)
+        newPopulation.calcFitness(genetic.FITNESS_GROUP_BASED, {"Actions" : Gene([W, W]), "Sensors" : Gene("Front")})
+        oldPopulation, newPopulation = newPopulation.filterPopulation(simpleSplit)
         toCreate = len(oldPopulation) - len(newPopulation)
         for _ in range(toCreate):
             father, mother = oldPopulation.selectParents(simpleSplit)
             child = newPopulation.crossOver(father, mother, randomShuffle)
-            #child.mutate(25, recessive)
+            child.mutate(15, recessive)
             child.epoch = epoch
 
             newPopulation += child
@@ -93,8 +83,7 @@ def runCode():
             (BOLD + BLUE + "Best: {}" + END + END).format(newPopulation.best)
         )
 
-        if newPopulation.best.fitness == GENES_PER_SPECIE:
+        if newPopulation.best.fitness == 6:
             return newPopulation.best
-
 
 runCode()

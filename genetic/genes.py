@@ -2,7 +2,7 @@ import copy
 
 from numpy import random, NINF
 
-from genetic import genes, error_handling, utils, FITNESS_GENE_BASED
+from genetic import genes, error_handling, utils, FITNESS_GENE_BASED, FITNESS_GROUP_BASED
 
 
 class GeneGroup:
@@ -134,24 +134,20 @@ class GeneGroup:
 
     def generateRandomGeneSequence(self, possibleGenes=0, possibleGroups=0, numberOfGenes=0, numberOfGroups=0):
         if numberOfGenes == 0 and numberOfGroups == 0:
-            raise AttributeError(
-                "numberOfGenes or numberOfGroups can be zero, not both")
+            raise AttributeError("numberOfGenes or numberOfGroups can be zero, not both")
 
         if numberOfGenes > 0:
             if len(possibleGenes) == 0:
-                raise AttributeError(
-                    "Number of Genes is set but none is defined")
+                raise AttributeError("Number of Genes is set but none is defined")
 
             totalGenes = utils.globalChoice(possibleGenes, numberOfGenes, True)
             self.setAllGenes(totalGenes)
 
         if numberOfGroups > 0:
             if len(possibleGroups) == 0:
-                raise AttributeError(
-                    "Number of Groups is set but none is defined")
+                raise AttributeError("Number of Groups is set but none is defined")
 
-            totalGroups = utils.globalChoice(
-                possibleGroups, numberOfGroups, True)
+            totalGroups = utils.globalChoice(possibleGroups, numberOfGroups, True)
             self.setAllGroups(totalGroups, True)
     
     def randomizeGenes(self, keepGroups=False, recursiveRandom=False):
@@ -190,8 +186,7 @@ class GeneGroup:
             self.recessiveGenes.add(newValue)
 
         elif newValueType in (GeneGroup, Specie):
-            raise TypeError(
-                "Object of type %s is not supported by this method" % newValueType)
+            raise TypeError("Object of type %s is not supported by this method" % newValueType)
 
         else:
             self.addGene(Gene(newValue))
@@ -280,18 +275,24 @@ class Specie(GeneGroup):
     def mutate(self, mutationChance, mutationType):
         if random.randint(0, 100) < mutationChance:
             self.isMutation = True
-            newGenes = mutationType(self)
-            self.setAllGenes(newGenes)
+            self = mutationType(self)
 
     def calcFitness(self, calculationType, handler=None):
         if calculationType == FITNESS_GENE_BASED:
             if type(handler) not in (genes.Gene, genes.GeneGroup):
                 handler = Gene(handler)
             self.fitness = self.genes.count(handler)
+        elif calculationType == FITNESS_GROUP_BASED:
+            self.fitness = 0
+            for groupName, group in self.groups.items():
+                if type(group) != GeneGroup:
+                    print("Fail!")
+                    print(self)
+                    raise
+                self.fitness += group.genes.count(handler.get(groupName, 0))
         else:
-            raise AttributeError("calculationType needs to be defined")
+            raise AttributeError("calculationType is invalid")
 
     def createName(self, namesOptions):
-        self.speciesName = "%s.%d" % (random.choice(
-            namesOptions), random.randint(100000))
+        self.speciesName = "%s.%d" % (random.choice(namesOptions), random.randint(100000))
         return self.speciesName
