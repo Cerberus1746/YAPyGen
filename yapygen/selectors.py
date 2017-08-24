@@ -1,6 +1,6 @@
 from numpy import random
 
-from genetic import error_handling, utils
+from yapygen import error_handling, utils
 
 
 def tournament(population, **kargs):

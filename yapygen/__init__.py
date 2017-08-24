@@ -1,3 +1,5 @@
+"""Teste!"""
+
 FITNESS_GENE_BASED = "fitnessGeneBased"
 FITNESS_GROUP_BASED = "fitnessGroupBased"
 FITNESS_SET = "fitnessSet"

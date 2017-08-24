@@ -2,9 +2,9 @@ import copy
 
 from numpy import NINF
 
-from genetic import genes, error_handling
-import genetic
-from genetic.genes import Specie
+from yapygen import genes, error_handling
+import yapygen
+from yapygen.genes import Specie
 
 
 class Population(genes.GeneGroup):
@@ -133,7 +133,7 @@ class Population(genes.GeneGroup):
 
         if father.name != mother.name:
             if speciesNamesOptions == "default":
-                child.createName(genetic.SPECIES_OPTIONS)
+                child.createName(yapygen.SPECIES_OPTIONS)
             else:
                 child.createName(speciesNamesOptions)
         else:

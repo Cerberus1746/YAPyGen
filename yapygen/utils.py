@@ -2,7 +2,7 @@ import copy
 
 from numpy import random
 
-from genetic import error_handling
+from yapygen import error_handling
 
 
 def globalChoice(a, numberOfItemsToGet=1, allowRepeats=False):

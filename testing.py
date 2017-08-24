@@ -1,9 +1,9 @@
-import genetic
-from genetic.genes import GeneGroup, Specie, Gene
-from genetic.mutation import recessive
-from genetic.population import Population
-from genetic.selectors import simpleSplit
-from genetic.cross_over import randomShuffle
+import yapygen
+from yapygen.genes import GeneGroup, Specie, Gene
+from yapygen.mutation import recessive
+from yapygen.population import Population
+from yapygen.selectors import simpleSplit
+from yapygen.cross_over import randomShuffle
 
 
 PURPLE = '\033[95m'
@@ -67,7 +67,7 @@ def runCode():
     for epoch in range(TRAINING_EPOCHS):
         print((BOLD + GREEN + "\nEpoch: {}" + END + END).format(epoch))
 
-        newPopulation.calcFitness(genetic.FITNESS_GROUP_BASED, {"Actions" : Gene([W, W]), "Sensors" : Gene("Front")})
+        newPopulation.calcFitness(yapygen.FITNESS_GROUP_BASED, {"Actions" : Gene([W, W]), "Sensors" : Gene("Front")})
         oldPopulation, newPopulation = newPopulation.filterPopulation(simpleSplit)
         toCreate = len(oldPopulation) - len(newPopulation)
         for _ in range(toCreate):
@@ -86,4 +86,5 @@ def runCode():
         if newPopulation.best.fitness == 6:
             return newPopulation.best
 
-runCode()
+if __name__ == "__main__":
+    runCode()
