@@ -28,22 +28,20 @@ class Population(genes.GeneGroup):
         genes.GeneGroup.__init__(self, *values, name, maxGenes, maxGroups)
 
     def __getitem__(self, name):
-        if type(name) == int:
+        if isinstance(name, int):
             return self._allPopulation[name]
-        elif type(name) == str:
+        elif isinstance(name, str):
             return genes.GeneGroup.__getitem__(self, name)
         else:
-            raise AttributeError(
-                "Use int to getGroup specie from population or string to getGroup avaiable GeneGroup")
+            raise AttributeError("Use int to getGroup specie from population or string to getGroup avaiable GeneGroup")
 
     def __setitem__(self, name, value):
-        if type(name) == int:
+        if isinstance(name, int):
             self._allPopulation[name] = value
-        elif type(name) == str:
+        elif isinstance(name, str):
             genes.GeneGroup.__setitem__(self, name, value)
         else:
-            raise AttributeError(
-                "Use int to define specie from population or string to define value of GeneGroup")
+            raise AttributeError("Use int to define specie from population or string to define value of GeneGroup")
 
     def __iter__(self):
         return self
@@ -62,16 +60,16 @@ class Population(genes.GeneGroup):
         return len(self._allPopulation)
 
     def __add__(self, other):
-        if type(other) == Specie:
+        if isinstance(other, Specie):
             self._allPopulation.append(other)
             return self
         return genes.GeneGroup.__add__(self, other)
 
-    def calcFitness(self, calculationType, handler=""):
+    def calc_fitness(self, calculationType, handler=""):
         for index in range(len(self)):
-            self[index].calcFitness(calculationType, handler)
+            self[index].calc_fitness(calculationType, handler)
 
-    def filterPopulation(self, filterType, **kargs):
+    def filter_population(self, filterType, **kargs):
         for sIndex, specie in enumerate(self):
             if specie.fitness == NINF:
                 raise error_handling.NoFitnessValue(
@@ -95,10 +93,11 @@ class Population(genes.GeneGroup):
         self._allPopulation = filterType(self._allPopulation, **kargs)
         return (oldPopulation, self)
 
-    def selectParents(self, selectionType):
+    def select_parents(self, selectionType):
         return selectionType(self._allPopulation, numberOfSpecies=2)
 
-    def generatePopulation(self, numberOfSpecies, genesPerSpecie, groupsPerSpecie, reset=True):
+    def generatePopulation(self, numberOfSpecies,
+                           genesPerSpecie, groupsPerSpecie, reset=True):
         if reset:
             self._allPopulation = []
         for newSpecie in range(numberOfSpecies):
@@ -107,7 +106,7 @@ class Population(genes.GeneGroup):
             newSpecie.maxGenes = genesPerSpecie
             newSpecie.maxGroups = groupsPerSpecie
 
-            newSpecie.generateRandomGeneSequence(
+            newSpecie.generate_random_gene_sequence(
                 possibleGroups=list(self.groups.values()),
                 possibleGenes=self.genes,
                 numberOfGenes=genesPerSpecie,
@@ -115,27 +114,27 @@ class Population(genes.GeneGroup):
             )
 
             self._allPopulation.append(newSpecie)
-    
-    def generatePopulationFromSpecie(self, baseSpecie, numberOfSpecie):
+
+    def generate_population_from_specie(self, baseSpecie, numberOfSpecie):
         tmpPopulation = []
         for _ in range(numberOfSpecie):
             tmpNewSpecie = baseSpecie.deepcopy()
-            tmpNewSpecie.randomizeGenes(keepGroups=True, recursiveRandom=True)
+            tmpNewSpecie.randomize_genes(keepGroups=True, recursiveRandom=True)
             tmpPopulation.append(tmpNewSpecie)
-        
-        self._allPopulation = tmpPopulation
-    
 
-    def crossOver(self, father, mother, crossOverType, speciesNamesOptions="default"):
+        self._allPopulation = tmpPopulation
+
+    def cross_over(self, father, mother, crossOverType,
+                   speciesNamesOptions="default"):
         child = crossOverType(father, mother)
 
-        child.initChild((father, mother))
+        child.init_child((father, mother))
 
         if father.name != mother.name:
             if speciesNamesOptions == "default":
-                child.createName(yapygen.SPECIES_OPTIONS)
+                child.create_name(yapygen.SPECIES_OPTIONS)
             else:
-                child.createName(speciesNamesOptions)
+                child.create_name(speciesNamesOptions)
         else:
             child.name = father.name
         return child

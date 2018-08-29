@@ -41,13 +41,13 @@ def joinDictLists(*dictList):
     newDict = {}
     for actualDict in dictList:
         for keyName, itemValue in actualDict.items():
-            if not newDict.getGroup(keyName, False):
+            if not newDict.get_group(keyName, False):
                 newDict[keyName] = copy.copy(itemValue)
             else:
-                if type(itemValue) == list:
+                if isinstance(itemValue, list):
                     for newValue in itemValue:
                         newDict[keyName].append(newValue)
-                elif type(itemValue) == dict:
+                elif isinstance(itemValue, dict):
                     newDict[keyName] = joinDictLists(
                         newDict[keyName], itemValue)
                 else:

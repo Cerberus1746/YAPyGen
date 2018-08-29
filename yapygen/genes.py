@@ -1,48 +1,54 @@
+'''Module used to hold all Gene related objects'''
+
 import copy
 
 from numpy import random, NINF
 
-from yapygen import genes, error_handling, utils, FITNESS_GENE_BASED, FITNESS_GROUP_BASED
+from yapygen import error_handling, utils, constants
 
 
-class GeneGroup:
+class GeneGroup(object):
     '''
     Main class used for all types of objects, but for the Gene object.
     GeneGroups are the object used to keep multiple Genes inside.
     '''
-    def __init__(self, *addGenes, name="", maxGenes=0, maxGroups=0):
+    name = ""
+    maxGenes = False
+    maxGroups = False
+
+    genes = []
+    groups = {}
+
+    recessiveGenes = set()
+    recessiveGroups = set()
+
+    def __init__(self, *addGenes, name="", maxGenes=False, maxGroups=False):
         '''
         Create the group
 
-        :param addGenes: Add genes to the group, anything that is not a GeneGroup will be converted to a Gene object.
+        :param addGenes: Add genes to the group, anything that is not a
+        GeneGroup will be converted to a Gene object.
         Any inserted gene will be added to the recessive genes too.
-        :param str name: Name of the group. Groups with same names will be crossed over depending on the use.
+        :param str name: Name of the group. Groups with same names will be crossed over
+        depending on the use.
         :param int maxGenes: Maximun number of genes.
         :param int maxGroups: Maximun numbers of groups.
         '''
-        
-        self.name = name
-        self.maxGenes = maxGenes
-        self.maxGroups = maxGroups
-
-        self.genes = []
-        self.groups = {}
-
-        self.recessiveGenes = set()
-        self.recessiveGroups = set()
+        name = name
+        maxGenes = maxGenes
+        maxGroups = maxGroups
 
         self._index = -1
-
-        for gene in addGenes:
-            if type(gene) == genes.GeneGroup:
-                self.addGroup(gene)
-
-            else:
-                self.addGene(gene)
+        if len(addGenes) > 0:
+            for gene in addGenes:
+                if type(gene) in [GeneGroup, Specie]:
+                    self.add_group(gene)
+                else:
+                    self.add_gene(gene)
 
     def __iterable__(self):
         '''
-        Iterator. It will iterableate along the genes.
+        Iterator. It will iterate along the genes.
         '''
         return self
 
@@ -72,31 +78,34 @@ class GeneGroup:
         :raises KeyError: if the group is not found.
         :raises AttributeError: if key is not a string.
         '''
-        if type(name) == str:
+        if isinstance(name, str):
             if name in self.groups:
                 return self.groups[name]
 
             raise KeyError("Group not found")
 
         else:
-            raise AttributeError("%s object only accepts string as a key" % type(self))
+            raise AttributeError(
+                "%s object only accepts string as a key" % type(self))
 
     def __setitem__(self, name, value):
         '''
         Set value of the group, it needs to be a GeneGroup too.
 
-        :param str name: Name of the new group or name of the group to create. This value will overlay the group name.
+        :param str name: Name of the new group or name of the group to create.
+        This value will overlay the group name.
         :param GeneGroup value: New Group.
         :raises AttributeError: If value is not a GeneGroup or if key is not string.
         '''
-        if type(name) == str:
-            if type(value) != GeneGroup:
+        if isinstance(name, str):
+            if not isinstance(value, GeneGroup):
                 raise AttributeError("Value must be a GeneGroup")
             value.name = name
             self.groups[name] = value
 
         else:
-            raise AttributeError("%s object only accepts string as a key" % type(self))
+            raise AttributeError(
+                "%s object only accepts string as a key" % type(self))
 
     def __add__(self, other):
         '''
@@ -105,14 +114,14 @@ class GeneGroup:
         :param other: GeneGroup or Gene to add.
         '''
         selfCopy = self.deepcopy()
-        if type(other) == genes.Gene:
-            selfCopy.addGene(other)
+        if type(other) == Gene:
+            selfCopy.add_gene(other)
 
         elif type(other) == GeneGroup:
             selfCopy.genes += other.genes
             selfCopy.recessiveGenes.union(other.recessiveGenes)
             if len(other.groups):
-                selfCopy.addMultipleGroups(list(other.groups.values()))
+                selfCopy.add_multiple_groups(list(other.groups.values()))
 
         else:
             return NotImplemented
@@ -137,7 +146,7 @@ class GeneGroup:
         '''Copy group recursively.'''
         return copy.deepcopy(self)
 
-    def getGroup(self, name, defaultReturn=False):
+    def get_group(self, name, defaultReturn=False):
         '''Get group, if group don't exist, return defaultReturn
 
         :param str name: name of the group to get
@@ -148,11 +157,11 @@ class GeneGroup:
 
         return defaultReturn
 
-    def shuffleGenes(self):
+    def shuffle_genes(self):
         '''Randomize position of the genes.'''
         random.shuffle(self.genes)
 
-    def setAllGenes(self, genes):
+    def set_all_genes(self, genes):
         '''Reset genes and add new ones
 
         :param iterable genes: list of genes to add.
@@ -160,29 +169,36 @@ class GeneGroup:
         if len(genes) > 0:
             self.genes = []
             for gene in genes:
-                self.addGene(gene)
+                self.add_gene(gene)
         else:
             raise error_handling.Genes("Gene List can't be empty")
 
-    def setAllGroups(self, groups, setLimits=False):
-        '''Reset groups and add new ones. If set limits is true, remove the excess genes randomly.
-        
+    def set_all_groups(self, groups, setLimits=False):
+        '''Reset groups and add new ones. If set limits is true,
+        remove the excess genes randomly.
+
         :param iterable groups: New Groups to add.
         :param bool setLimits: Remove excess genes or not.
         '''
         if len(groups) > 0:
             self.groups = {}
             for group in groups:
-                if type(group) != GeneGroup:
+                if not isinstance(group, GeneGroup):
                     raise AttributeError("Invalid type")
 
-                self.addGroup(group, setLimits)
+                self.add_group(group, setLimits)
         else:
             raise error_handling.Genes("Gene List can't be empty")
 
-    def generateRandomGeneSequence(self, possibleGenes=0, possibleGroups=0, numberOfGenes=0, numberOfGroups=0):
+    def generate_random_gene_sequence(
+            self,
+            possibleGenes=0,
+            possibleGroups=0,
+            numberOfGenes=0,
+            numberOfGroups=0,
+            repeatGenes=True):
         '''Create gene sequence randomly based on the supplied GeneGroups or Genes.
-        
+
         :param iterable possibleGenes: List of possible genes to choose.
         :param iterable possibleGroups: List of possible GeneGroups to choose.
         :param int numberOfGenes: Number of Genes to add.
@@ -195,65 +211,65 @@ class GeneGroup:
             if len(possibleGenes) == 0:
                 raise AttributeError("Number of Genes is set but none is defined")
 
-            totalGenes = utils.globalChoice(possibleGenes, numberOfGenes, True)
-            self.setAllGenes(totalGenes)
+            totalGenes = utils.globalChoice(possibleGenes, numberOfGenes, repeatGenes)
+            self.set_all_genes(totalGenes)
 
         if numberOfGroups > 0:
             if len(possibleGroups) == 0:
                 raise AttributeError("Number of Groups is set but none is defined")
 
-            totalGroups = utils.globalChoice(possibleGroups, numberOfGroups, True)
-            self.setAllGroups(totalGroups, True)
-    
-    def randomizeGenes(self, keepGroups=False, recursiveRandom=False):
+            totalGroups = utils.globalChoice(possibleGroups, numberOfGroups, repeatGenes)
+            self.set_all_groups(totalGroups, True)
+
+    def randomize_genes(self, keepGroups=False, recursiveRandom=False):
         '''Randomize genes or randomize genes inside group.
-        
+
         :param bool keepGroups: If True: Do not erase or add new groups, keep them the same.
         :param bool recursiveRandom: Recursively randomize genes inside groups too.
         '''
         if not keepGroups:
-            self.generateRandomGeneSequence(
+            self.generate_random_gene_sequence(
                 possibleGenes=self.genes,
                 possibleGroups=list(self.groups.values()),
                 numberOfGenes=self.maxGenes,
                 numberOfGroups=self.maxGroups)
         else:
             if self.maxGenes > 0:
-                self.generateRandomGeneSequence(possibleGenes=self.genes, numberOfGenes=self.maxGenes)
-        
+                self.generate_random_gene_sequence(possibleGenes=self.genes, numberOfGenes=self.maxGenes)
+
         for groupName, group in self.groups.items():
-            group.randomizeGenes(keepGroups=recursiveRandom)
+            group.randomize_genes(keepGroups=recursiveRandom)
             self[groupName] = group
 
-
-    def addMultipleGenes(self, geneList):
+    def add_multiple_genes(self, geneList):
         '''Add list of genes, any variable that isn't a gene will be transformed into one.
-        
+
         :param iterable geneList: List of Genes to ADD
         '''
         if len(geneList) == 0:
             raise AttributeError("geneList value can't be empty")
 
         for gene in geneList:
-            if type(gene) == GeneGroup:
+            if isinstance(gene, GeneGroup):
                 raise AttributeError
-            self.addGene(gene)
+            self.add_gene(gene)
 
-    def addMultipleGroups(self, groupList, setLimits=False):
+    def add_multiple_groups(self, groupList, setLimits=False):
         '''Add list of Groups
-        
+
         :param groupList: List of groups to add.
         :param setLimits: Remove excess genes or not.
         '''
         if len(groupList) == 0:
             raise AttributeError("Group list can't be empty")
         for group in groupList:
-            self.addGroup(group, setLimits)
+            self.add_group(group, setLimits)
 
-    def addGene(self, newValue):
+    def add_gene(self, newValue):
         '''Add new gene.
-        
-        :param newValue: Gene to add, if any object is added they will be converted to Gene object automatically
+
+        :param newValue: Gene to add, if any object is added
+        they will be converted to Gene object automatically
         '''
         newValueType = type(newValue)
         if newValueType == Gene:
@@ -261,23 +277,24 @@ class GeneGroup:
             self.recessiveGenes.add(newValue)
 
         elif newValueType in (GeneGroup, Specie):
-            raise TypeError("Object of type %s is not supported by this method" % newValueType)
+            raise TypeError(
+                "Object of type %s is not supported by this method" % newValueType)
 
         else:
-            self.addGene(Gene(newValue))
+            self.add_gene(Gene(newValue))
 
         return self
 
-    def addGroup(self, newGroup, setLimits=False):
+    def add_group(self, newGroup, setLimits=False):
         '''Add new group
-        
+
         :param newGroup: Group to be added.
         :param setLimits: Remove excess genes or not.
         '''
         if type(newGroup) != GeneGroup:
             raise AttributeError("Invalid type")
 
-        if not self.getGroup(newGroup.name, False):
+        if not self.get_group(newGroup.name, False):
             newGroup = newGroup.deepcopy()
             self.recessiveGroups.add(newGroup)
             self[newGroup.name] = newGroup
@@ -286,43 +303,52 @@ class GeneGroup:
             self[newGroup.name] += newGroup
 
         if setLimits:
-            if newGroup.maxGenes > 0 and len(newGroup.genes) > newGroup.maxGenes:
-                newGroup.generateRandomGeneSequence(possibleGenes=newGroup.genes, numberOfGenes=newGroup.maxGenes)
+            if newGroup.maxGenes > 0 and len(
+                    newGroup.genes) > newGroup.maxGenes:
+                newGroup.generate_random_gene_sequence(
+                    possibleGenes=newGroup.genes,
+                    numberOfGenes=newGroup.maxGenes)
 
-            if newGroup.maxGroups > 0 and len(newGroup.groups) > newGroup.maxGroups:
-                newGroup.generateRandomGeneSequence(possibleGroups=newGroup.groups, numberOfGroups=newGroup.maxGroups)
+            if newGroup.maxGroups > 0 and len(
+                    newGroup.groups) > newGroup.maxGroups:
+                newGroup.generate_random_gene_sequence(
+                    possibleGroups=newGroup.groups,
+                    numberOfGroups=newGroup.maxGroups)
 
         return self
 
 
-class Gene:
+class Gene(object):
     '''Basic object for the yapygen processing.'''
+    
+    recessive = False
+    groups = []
+
+    value = 0
+
     def __init__(self, value):
         '''Create a new gene
-        
+
         :param value: Value to be used.
         '''
-        self.recessive = False
-        self.groups = []
-
         self.value = value
 
     def __add__(self, other):
-        if type(other) == type(self):
+        if isinstance(other, type(self)):
             return GeneGroup(self, other)
 
         else:
             return other + self
 
     def __eq__(self, other):
-        if type(self) == type(other):
+        if isinstance(self, type(other)):
             return self.__hash__() == other.__hash__()
 
         else:
             return NotImplemented
 
     def __hash__(self):
-        if type(self.value) == list:
+        if isinstance(self.value, list):
             return hash(tuple(self.value))
         else:
             return hash(self.value)
@@ -341,12 +367,16 @@ class Specie(GeneGroup):
         self.parents = ()
         self.isMutation = False
 
-        GeneGroup.__init__(self, *values, name=name,
-                           maxGenes=maxGenes, maxGroups=maxGroups)
+        super().__init__(*values, name=name, maxGenes=maxGenes, maxGroups=maxGroups)
 
     def __repr__(self):
-        return "\n<Specie: {} Genes({}) \nGroups({})\n\tFitness: {}>".format(self.name, self.genes, list(self.groups.values()), self.fitness)
-    
+        return "\n<Specie: {} Genes({}) \nGroups({})\n\tFitness: {}>".format(
+            self.name,
+            self.genes,
+            list(self.groups.values()),
+            self.fitness
+        )
+
     def __add__(self, other):
         '''
         Merge Species, add GeneGroup or Gene to Specie
@@ -354,18 +384,18 @@ class Specie(GeneGroup):
         :param other: Specie to Merge, GeneGroup or Gene to add.
         '''
         selfCopy = self.deepcopy()
-        if type(other) == Specie:
+        if isinstance(other, Specie):
             selfCopy.genes += other.genes
             selfCopy.recessiveGenes.union(other.recessiveGenes)
             if len(other.groups):
-                selfCopy.addMultipleGroups(list(other.groups.values()))
+                selfCopy.add_multiple_groups(list(other.groups.values()))
 
         else:
             return GeneGroup.__add__(self, other)
 
         return selfCopy
 
-    def initChild(self, parents):
+    def init_child(self, parents):
         self.fitness = NINF
         self.age = 0
         self.primordial = False
@@ -379,22 +409,19 @@ class Specie(GeneGroup):
             self.isMutation = True
             self = mutationType(self)
 
-    def calcFitness(self, calculationType, handler=None):
-        if calculationType == FITNESS_GENE_BASED:
-            if type(handler) not in (genes.Gene, genes.GeneGroup):
+    def calc_fitness(self, calculationType, handler=None):
+        if calculationType == constants.FITNESS_GENE_BASED:
+            if type(handler) not in (Gene, GeneGroup):
                 handler = Gene(handler)
             self.fitness = self.genes.count(handler)
-        elif calculationType == FITNESS_GROUP_BASED:
+        elif calculationType == constants.FITNESS_GROUP_BASED:
             self.fitness = 0
             for groupName, group in self.groups.items():
-                if type(group) != GeneGroup:
-                    print("Fail!")
-                    print(self)
-                    raise
                 self.fitness += group.genes.count(handler.get(groupName, 0))
         else:
             raise AttributeError("calculationType is invalid")
 
-    def createName(self, namesOptions):
-        self.speciesName = "%s.%d" % (random.choice(namesOptions), random.randint(100000))
-        return self.speciesName
+    def create_name(self, namesOptions):
+        self.name = "%s.%d" % (random.choice(
+            namesOptions), random.randint(100000))
+        return self.name

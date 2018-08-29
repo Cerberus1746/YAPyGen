@@ -1,22 +1,9 @@
-import yapygen
+import yapygen.constants
+from yapygen.cross_over import random_shuffle
 from yapygen.genes import GeneGroup, Specie, Gene
 from yapygen.mutation import recessive
 from yapygen.population import Population
 from yapygen.selectors import simpleSplit
-from yapygen.cross_over import randomShuffle
-
-
-PURPLE = '\033[95m'
-CYAN = '\033[96m'
-DARKCYAN = '\033[36m'
-BLUE = '\033[94m'
-GREEN = '\033[92m'
-YELLOW = '\033[93m'
-RED = '\033[91m'
-BOLD = '\033[1m'
-UNDERLINE = '\033[4m'
-END = '\033[0m'
-
 
 W = 119
 A = 97
@@ -29,62 +16,66 @@ GENES_PER_SPECIE = 0
 GROUPS_PER_SPECIE = 4
 
 POSSIBLE_GROUPS = [
-    GeneGroup(
-        [W, W],
-        [A, A],
-        [S, S],
-        [D, D],
+	GeneGroup(
+		[W, W],
+		[A, A],
+		[S, S],
+		[D, D],
 
-        [W, D],
-        [W, A],
-        [S, D],
-        [S, A],
-        name="Actions",
-        maxGenes=3
-    ),
-    GeneGroup(
-        "Front",
-        "Back",
-        "Right",
-        "Left",
-        name="Sensors",
-        maxGenes=3
-    )
+		[W, D],
+		[W, A],
+		[S, D],
+		[S, A],
+		name="Actions",
+		maxGenes=3
+	),
+	GeneGroup(
+		"Front",
+		"Back",
+		"Right",
+		"Left",
+		name="Sensors",
+		maxGenes=3
+	)
 ]
 
 POSSIBLE_GENES = []
-
-defaultSpecies = Specie(POSSIBLE_GROUPS[0], POSSIBLE_GROUPS[1], maxGroups=2)
+DEFAULT_SPECIES = Specie(POSSIBLE_GROUPS[0], POSSIBLE_GROUPS[1], maxGroups=2)
 
 def runCode():
-    newPopulation = Population()
+	newPopulation = Population()
 
-    newPopulation.generatePopulationFromSpecie(defaultSpecies, 10)
+	newPopulation.generate_population_from_specie(DEFAULT_SPECIES, 10)
 
-    print(BOLD + GREEN + "Initial Population" + END + END)
-    print(newPopulation)
+	print("Initial Population")
+	print(newPopulation)
 
-    for epoch in range(TRAINING_EPOCHS):
-        print((BOLD + GREEN + "\nEpoch: {}" + END + END).format(epoch))
+	for epoch in range(TRAINING_EPOCHS):
+		print(("\nEpoch: {}").format(epoch))
 
-        newPopulation.calcFitness(yapygen.FITNESS_GROUP_BASED, {"Actions" : Gene([W, W]), "Sensors" : Gene("Front")})
-        oldPopulation, newPopulation = newPopulation.filterPopulation(simpleSplit)
-        toCreate = len(oldPopulation) - len(newPopulation)
-        for _ in range(toCreate):
-            father, mother = oldPopulation.selectParents(simpleSplit)
-            child = newPopulation.crossOver(father, mother, randomShuffle)
-            child.mutate(15, recessive)
-            child.epoch = epoch
+		newPopulation.calc_fitness(yapygen.constants.FITNESS_GROUP_BASED, {
+			"Actions": Gene([W, W]),
+			"Sensors": Gene("Front")
+		})
+		oldPopulation, newPopulation = newPopulation.filter_population(
+			simpleSplit)
+		toCreate = len(oldPopulation) - len(newPopulation)
+		for _ in range(toCreate):
+			father, mother = oldPopulation.select_parents(simpleSplit)
+			child = newPopulation.cross_over(father, mother, random_shuffle)
+			child.mutate(15, recessive)
+			child.epoch = epoch
 
-            newPopulation += child
+			newPopulation += child
 
-        print("New Population: ", newPopulation)
-        print(
-            (BOLD + BLUE + "Best: {}" + END + END).format(newPopulation.best)
-        )
+		print("New Population: ", newPopulation)
+		print(
+			("Best: {}").format(newPopulation.best)
+		)
 
-        if newPopulation.best.fitness == 6:
-            return newPopulation.best
+		if newPopulation.best.fitness == 6:
+			return newPopulation.best
+
 
 if __name__ == "__main__":
-    runCode()
+	runCode()
