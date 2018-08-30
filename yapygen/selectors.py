@@ -15,7 +15,7 @@ def tournament(population, **kargs):
             "numberOfSpecies value is over the number of avaiable species")
 
     for _ in range(kargs["numberOfSpecies"]):
-        randomPop = utils.globalChoice(population, 2)
+        randomPop = utils.global_choice(population, 2)
         if randomPop[0].fitness > randomPop[1].fitness:
             winners.append(randomPop[0])
 

@@ -1,6 +1,5 @@
 '''module containing all cross over functions'''
-from yapygen.genes import Specie
-import collections
+from yapygen.genes.specie import Specie
 from numpy.random import randint
 
 def random_shuffle(mother, father, groups=False):

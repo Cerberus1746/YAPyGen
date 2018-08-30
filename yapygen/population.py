@@ -2,12 +2,13 @@ import copy
 
 from numpy import NINF
 
-from yapygen import genes, error_handling
-import yapygen
-from yapygen.genes import Specie
+from yapygen import error_handling
+from yapygen.constants import SPECIES_OPTIONS
+from yapygen.genes.gene_group import GeneGroup
+from yapygen.genes.specie import Specie
 
 
-class Population(genes.GeneGroup):
+class Population(GeneGroup):
     def __init__(
             self,
             *values,
@@ -23,15 +24,15 @@ class Population(genes.GeneGroup):
         self.historic = []
         self.defaultSpeciesNumber = defaultSpeciesCount
 
-        self.best = genes.Specie()
+        self.best = Specie()
 
-        genes.GeneGroup.__init__(self, *values, name, maxGenes, maxGroups)
+        GeneGroup.__init__(self, *values, name, maxGenes, maxGroups)
 
     def __getitem__(self, name):
         if isinstance(name, int):
             return self._allPopulation[name]
         elif isinstance(name, str):
-            return genes.GeneGroup.__getitem__(self, name)
+            return GeneGroup.__getitem__(self, name)
         else:
             raise AttributeError("Use int to getGroup specie from population or string to getGroup avaiable GeneGroup")
 
@@ -39,7 +40,7 @@ class Population(genes.GeneGroup):
         if isinstance(name, int):
             self._allPopulation[name] = value
         elif isinstance(name, str):
-            genes.GeneGroup.__setitem__(self, name, value)
+            GeneGroup.__setitem__(self, name, value)
         else:
             raise AttributeError("Use int to define specie from population or string to define value of GeneGroup")
 
@@ -63,7 +64,7 @@ class Population(genes.GeneGroup):
         if isinstance(other, Specie):
             self._allPopulation.append(other)
             return self
-        return genes.GeneGroup.__add__(self, other)
+        return GeneGroup.__add__(self, other)
 
     def calc_fitness(self, calculationType, handler=""):
         for index in range(len(self)):
@@ -96,7 +97,7 @@ class Population(genes.GeneGroup):
     def select_parents(self, selectionType):
         return selectionType(self._allPopulation, numberOfSpecies=2)
 
-    def generatePopulation(self, numberOfSpecies,
+    def generate_population(self, numberOfSpecies,
                            genesPerSpecie, groupsPerSpecie, reset=True):
         if reset:
             self._allPopulation = []
@@ -132,7 +133,7 @@ class Population(genes.GeneGroup):
 
         if father.name != mother.name:
             if speciesNamesOptions == "default":
-                child.create_name(yapygen.SPECIES_OPTIONS)
+                child.create_name(SPECIES_OPTIONS)
             else:
                 child.create_name(speciesNamesOptions)
         else:
