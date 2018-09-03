@@ -16,7 +16,7 @@ class Specie(gene_group.GeneGroup):
         self.parents = ()
         self.isMutation = False
 
-        super().__init__(*values, name=name, maxGenes=maxGenes, maxGroups=maxGroups)
+        gene_group.GeneGroup.__init__(self, *values, name=name, maxGenes=maxGenes, maxGroups=maxGroups)
 
     def __repr__(self):
         return "<Specie: {} Genes({})\nGroups({})\nFitness: {}>".format(

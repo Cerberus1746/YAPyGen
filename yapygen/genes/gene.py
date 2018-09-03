@@ -1,5 +1,3 @@
-from yapygen.genes import gene_group
-
 class Gene(object):
     '''Basic object for the yapygen processing.'''
     
@@ -17,6 +15,7 @@ class Gene(object):
 
     def __add__(self, other):
         if isinstance(other, type(self)):
+            from yapygen.genes import gene_group
             return gene_group.GeneGroup(self, other)
 
         else:
@@ -36,4 +35,4 @@ class Gene(object):
             return hash(self.value)
 
     def __repr__(self):
-        return "\n\tGene(%s)" % str(self.value)
+        return "Gene(%s)" % str(self.value)

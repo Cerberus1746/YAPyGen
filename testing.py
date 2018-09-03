@@ -1,6 +1,8 @@
 import yapygen.constants
 from yapygen.cross_over import random_shuffle
-from yapygen.genes import GeneGroup, Specie, Gene
+from yapygen.genes import gene_group
+from yapygen.genes import specie
+from yapygen.genes import gene
 from yapygen.mutation import recessive
 from yapygen.population import Population
 from yapygen.selectors import simpleSplit
@@ -16,7 +18,7 @@ GENES_PER_SPECIE = 0
 GROUPS_PER_SPECIE = 4
 
 POSSIBLE_GROUPS = [
-	GeneGroup(
+	gene_group.GeneGroup(
 		[W, W],
 		[A, A],
 		[S, S],
@@ -29,7 +31,7 @@ POSSIBLE_GROUPS = [
 		name="Actions",
 		maxGenes=3
 	),
-	GeneGroup(
+	gene_group.GeneGroup(
 		"Front",
 		"Back",
 		"Right",
@@ -40,7 +42,7 @@ POSSIBLE_GROUPS = [
 ]
 
 POSSIBLE_GENES = []
-DEFAULT_SPECIES = Specie(POSSIBLE_GROUPS[0], POSSIBLE_GROUPS[1], maxGroups=2)
+DEFAULT_SPECIES = specie.Specie(POSSIBLE_GROUPS[0], POSSIBLE_GROUPS[1], maxGroups=2)
 
 def runCode():
 	newPopulation = Population()
@@ -54,8 +56,8 @@ def runCode():
 		print(("\nEpoch: {}").format(epoch))
 
 		newPopulation.calc_fitness(yapygen.constants.FITNESS_GROUP_BASED, {
-			"Actions": Gene([W, W]),
-			"Sensors": Gene("Front")
+			"Actions": gene.Gene([W, W]),
+			"Sensors": gene.Gene("Front")
 		})
 		oldPopulation, newPopulation = newPopulation.filter_population(
 			simpleSplit)

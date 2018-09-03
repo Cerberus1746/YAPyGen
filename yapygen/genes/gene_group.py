@@ -1,12 +1,3 @@
-import copy
-
-from numpy import random
-
-import yapygen.error_handling, yapygen.utils
-from yapygen.genes import gene
-from yapygen.genes import specie
-
-
 class GeneGroup(object):
     '''
     Main class used for all types of objects, but for the Gene object.
@@ -36,6 +27,8 @@ class GeneGroup(object):
 
         self._index = -1
         if len(addGenes) > 0:
+            from yapygen.genes import specie
+
             for gene in addGenes:
                 if type(gene) in [GeneGroup, specie.Specie]:
                     self.add_group(gene)
@@ -46,7 +39,7 @@ class GeneGroup(object):
         '''
         Iterator. It will iterate along the genes.
         '''
-        return self
+        return self.genes
 
     def __next__(self):
         '''
@@ -79,6 +72,9 @@ class GeneGroup(object):
                 return self.groups[name]
 
             raise KeyError("Group not found")
+        
+        elif type(name) == int:
+            return self.genes[name]
 
         else:
             raise AttributeError(
@@ -109,6 +105,7 @@ class GeneGroup(object):
 
         :param other: GeneGroup or Gene to add.
         '''
+        from yapygen.genes import gene
         selfCopy = self.deepcopy()
         if isinstance(other, gene.Gene):
             selfCopy.add_gene(other)
@@ -134,10 +131,12 @@ class GeneGroup(object):
 
     def copy(self):
         '''Copy the object.'''
+        import copy
         return copy.copy(self)
 
     def deepcopy(self):
         '''Copy group recursively.'''
+        import copy
         return copy.deepcopy(self)
 
     def get_group(self, name, defaultReturn=False):
@@ -153,6 +152,7 @@ class GeneGroup(object):
 
     def shuffle_genes(self):
         '''Randomize position of the genes.'''
+        from numpy import random
         random.shuffle(self.genes)
 
     def set_all_genes(self, genes):
@@ -160,6 +160,7 @@ class GeneGroup(object):
 
         :param iterable genes: list of genes to add.
         '''
+        import yapygen.error_handling
         if len(genes) > 0:
             self.genes = []
             for gene in genes:
@@ -182,6 +183,7 @@ class GeneGroup(object):
 
                 self.add_group(group, setLimits)
         else:
+            import yapygen.error_handling
             raise yapygen.error_handling.Genes("Gene List can't be empty")
 
     def generate_random_gene_sequence(
@@ -198,13 +200,15 @@ class GeneGroup(object):
         :param int numberOfGenes: Number of Genes to add.
         :param int numberOfGroups: Number of GeneGroups to add.
         '''
+        import yapygen.utils
+        
         if numberOfGenes == 0 and numberOfGroups == 0:
             raise AttributeError("numberOfGenes or numberOfGroups can be zero, not both")
 
         if numberOfGenes > 0:
             if len(possibleGenes) == 0:
                 raise AttributeError("Number of Genes is set but none is defined")
-
+            
             totalGenes = yapygen.utils.global_choice(possibleGenes, numberOfGenes, repeatGenes)
             self.set_all_genes(totalGenes)
 
@@ -265,6 +269,9 @@ class GeneGroup(object):
         :param newValue: Gene to add, if any object is added
         they will be converted to Gene object automatically
         '''
+        from yapygen.genes import specie
+        from yapygen.genes import gene
+        
         if isinstance(newValue, gene.Gene):
             self.genes.append(newValue)
             self.recessiveGenes.add(newValue)

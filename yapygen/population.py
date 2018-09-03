@@ -4,16 +4,16 @@ from numpy import NINF
 
 from yapygen import error_handling
 from yapygen.constants import SPECIES_OPTIONS
-from yapygen.genes.gene_group import GeneGroup
-from yapygen.genes.specie import Specie
+from yapygen.genes import gene_group
+from yapygen.genes import specie
 
 
-class Population(GeneGroup):
+class Population(gene_group.GeneGroup):
     def __init__(
             self,
             *values,
             defaultSpeciesCount=False,
-            specieObject=genes.Specie,
+            specieObject=specie.Specie,
             name="",
             maxGenes=False,
             maxGroups=False):
@@ -24,15 +24,15 @@ class Population(GeneGroup):
         self.historic = []
         self.defaultSpeciesNumber = defaultSpeciesCount
 
-        self.best = Specie()
+        self.best = specie.Specie()
 
-        GeneGroup.__init__(self, *values, name, maxGenes, maxGroups)
+        gene_group.GeneGroup.__init__(self, *values, name, maxGenes, maxGroups)
 
     def __getitem__(self, name):
         if isinstance(name, int):
             return self._allPopulation[name]
         elif isinstance(name, str):
-            return GeneGroup.__getitem__(self, name)
+            return gene_group.GeneGroup.__getitem__(self, name)
         else:
             raise AttributeError("Use int to getGroup specie from population or string to getGroup avaiable GeneGroup")
 
@@ -40,7 +40,7 @@ class Population(GeneGroup):
         if isinstance(name, int):
             self._allPopulation[name] = value
         elif isinstance(name, str):
-            GeneGroup.__setitem__(self, name, value)
+            gene_group.GeneGroup.__setitem__(self, name, value)
         else:
             raise AttributeError("Use int to define specie from population or string to define value of GeneGroup")
 
@@ -61,10 +61,10 @@ class Population(GeneGroup):
         return len(self._allPopulation)
 
     def __add__(self, other):
-        if isinstance(other, Specie):
+        if isinstance(other, specie.Specie):
             self._allPopulation.append(other)
             return self
-        return GeneGroup.__add__(self, other)
+        return gene_group.GeneGroup.__add__(self, other)
 
     def calc_fitness(self, calculationType, handler=""):
         for index in range(len(self)):
