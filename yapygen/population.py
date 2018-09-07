@@ -10,13 +10,14 @@ from yapygen.genes import specie
 
 class Population(gene_group.GeneGroup):
     def __init__(
-            self,
-            *values,
-            defaultSpeciesCount=False,
-            specieObject=specie.Specie,
-            name="",
-            maxGenes=False,
-            maxGroups=False):
+        self,
+        *values,
+        defaultSpeciesCount=False,
+        specieObject=specie.Specie,
+        name="",
+        maxGenes=False,
+        maxGroups=False
+    ):
         self._allPopulation = []
 
         self.specieObject = specieObject
@@ -34,7 +35,9 @@ class Population(gene_group.GeneGroup):
         elif isinstance(name, str):
             return gene_group.GeneGroup.__getitem__(self, name)
         else:
-            raise AttributeError("Use int to getGroup specie from population or string to getGroup avaiable GeneGroup")
+            raise AttributeError(
+                "Use int to getGroup specie from population or string to getGroup avaiable GeneGroup"
+            )
 
     def __setitem__(self, name, value):
         if isinstance(name, int):
@@ -42,7 +45,9 @@ class Population(gene_group.GeneGroup):
         elif isinstance(name, str):
             gene_group.GeneGroup.__setitem__(self, name, value)
         else:
-            raise AttributeError("Use int to define specie from population or string to define value of GeneGroup")
+            raise AttributeError(
+                "Use int to define specie from population or string to define value of GeneGroup"
+            )
 
     def __iter__(self):
         return self
@@ -74,19 +79,21 @@ class Population(gene_group.GeneGroup):
         for sIndex, specie in enumerate(self):
             if specie.fitness == NINF:
                 raise error_handling.NoFitnessValue(
-                    "%s have no fitness value." % specie)
+                    "%s have no fitness value." % specie
+                )
 
             self[sIndex].age += 1
             if kargs.get("maxAge", False):
                 if specie.age > kargs["maxAge"]:
-                    del(self[sIndex])
+                    del (self[sIndex])
 
         if "numberOfSpecies" not in kargs:
             kargs["numberOfSpecies"] = int(len(self) / 2)
 
         oldPopulation = copy.deepcopy(self)
         self._allPopulation = sorted(
-            self._allPopulation, reverse=True, key=lambda specie: specie.fitness)
+            self._allPopulation, reverse=True, key=lambda specie: specie.fitness
+        )
 
         if self[0].fitness > self.best.fitness:
             self.best = self[0]
@@ -97,8 +104,9 @@ class Population(gene_group.GeneGroup):
     def select_parents(self, selectionType):
         return selectionType(self._allPopulation, numberOfSpecies=2)
 
-    def generate_population(self, numberOfSpecies,
-                           genesPerSpecie, groupsPerSpecie, reset=True):
+    def generate_population(
+        self, numberOfSpecies, genesPerSpecie, groupsPerSpecie, reset=True
+    ):
         if reset:
             self._allPopulation = []
         for newSpecie in range(numberOfSpecies):
@@ -111,7 +119,7 @@ class Population(gene_group.GeneGroup):
                 possibleGroups=list(self.groups.values()),
                 possibleGenes=self.genes,
                 numberOfGenes=genesPerSpecie,
-                numberOfGroups=groupsPerSpecie
+                numberOfGroups=groupsPerSpecie,
             )
 
             self._allPopulation.append(newSpecie)
@@ -120,13 +128,17 @@ class Population(gene_group.GeneGroup):
         tmpPopulation = []
         for _ in range(numberOfSpecie):
             tmpNewSpecie = baseSpecie.deepcopy()
-            tmpNewSpecie.randomize_genes(keepGroups=True, recursiveRandom=True)
+            differentiate = getattr(tmpNewSpecie, "differentiation", None)
+            if callable(differentiate):
+                tmpNewSpecie.differentiation()
+            else:
+                tmpNewSpecie.randomize_genes(keepGroups=True, recursiveRandom=True)
+
             tmpPopulation.append(tmpNewSpecie)
 
         self._allPopulation = tmpPopulation
 
-    def cross_over(self, father, mother, crossOverType,
-                   speciesNamesOptions="default"):
+    def cross_over(self, father, mother, crossOverType, speciesNamesOptions="default"):
         child = crossOverType(father, mother)
 
         child.init_child((father, mother))

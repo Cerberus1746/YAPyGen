@@ -1,8 +1,6 @@
-'''Module used to hold all Gene related objects'''
+"""Module used to hold all Gene related objects"""
 from numpy import random, NINF
 
-import yapygen.constants
-from yapygen.genes import gene
 from yapygen.genes import gene_group
 
 
@@ -16,22 +14,21 @@ class Specie(gene_group.GeneGroup):
         self.parents = ()
         self.isMutation = False
 
-        gene_group.GeneGroup.__init__(self, *values, name=name, maxGenes=maxGenes, maxGroups=maxGroups)
+        gene_group.GeneGroup.__init__(
+            self, *values, name=name, maxGenes=maxGenes, maxGroups=maxGroups
+        )
 
     def __repr__(self):
         return "<Specie: {} Genes({})\nGroups({})\nFitness: {}>".format(
-            self.name,
-            self.genes,
-            list(self.groups),
-            self.fitness
+            self.name, self.genes, list(self.groups), self.fitness
         )
 
     def __add__(self, other):
-        '''
+        """
         Merge Species, add GeneGroup or Gene to Specie
 
         :param other: Specie to Merge, GeneGroup or Gene to add.
-        '''
+        """
         selfCopy = self.deepcopy()
         if isinstance(other, Specie):
             selfCopy.genes += other.genes
@@ -54,25 +51,15 @@ class Specie(gene_group.GeneGroup):
         self.parents = parents
 
     def mutate(self, mutationChance, mutationType):
-        if random.randint(0, 100) < mutationChance:
+        if random.randint(0, 100) <= mutationChance:
             self.isMutation = True
             self = mutationType(self)
-        
+
         return self
 
     def calc_fitness(self, calculationType, handler=None):
-        if calculationType == yapygen.constants.FITNESS_GENE_BASED:
-            if type(handler) not in (gene.Gene, gene_group.GeneGroup):
-                handler = gene.Gene(handler)
-            self.fitness = self.genes.count(handler)
-        elif calculationType == yapygen.constants.FITNESS_GROUP_BASED:
-            self.fitness = 0
-            for groupName, group in self.groups.items():
-                self.fitness += group.genes.count(handler.get(groupName, 0))
-        else:
-            raise AttributeError("calculationType is invalid")
+        calculationType(self, handler)
 
     def create_name(self, namesOptions):
-        self.name = "%s.%d" % (random.choice(
-            namesOptions), random.randint(100000))
+        self.name = "%s.%d" % (random.choice(namesOptions), random.randint(100000))
         return self.name
